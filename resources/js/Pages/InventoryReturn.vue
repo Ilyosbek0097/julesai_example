@@ -55,6 +55,10 @@ const selectedOutput = computed(() => {
     return props.outputs.find(o => o.id == selectedOutputId.value) || null
 })
 
+const hasInvalidQuantities = computed(() => {
+    return form.returns.some(item => !item.quantity || item.quantity < 1 || item.quantity > item.max_quantity);
+});
+
 function addReturnItem(detail: any) {
     if (form.returns.some(r => r.output_detail_id === detail.id)) {
         toast.warning('Mahsulot roʻyxatda mavjud!', {
@@ -247,7 +251,7 @@ watch(() => form.returns, (newReturns, oldReturns) => {
 
             <!-- Yuborish -->
             <div class="flex justify-end">
-                <Button @click="submitForm" :disabled="form.processing || form.returns.length === 0">
+                <Button @click="submitForm" :disabled="form.processing || form.returns.length === 0 || hasInvalidQuantities">
                     Saqlash
                 </Button>
             </div>
