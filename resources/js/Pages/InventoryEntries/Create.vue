@@ -37,6 +37,7 @@ const detailForm = useForm({
 const toggleBlok = ref(false);
 const categoryOptions = ref(props?.categories?.map((cat: any) => ({ label: cat.name, value: cat.id })));
 const unitOptions = ref(props?.units?.map((unit: any) => ({ label: unit.name, value: unit.id })));
+const supplierOptions = ref(props?.suppliers);
 const productOptions = computed(() =>
     props.products?.map((prod: any) => ({ label: prod.name, value: prod.id }))
 );
@@ -53,7 +54,7 @@ const newSupplierPhone = ref('');
 
 const supplierSearchTerm = ref('');
 const filteredSuppliers = computed(() =>
-    supplierOptions.value.filter(s => s.label.toLowerCase().includes(supplierSearchTerm.value.toLowerCase()))
+    (supplierOptions.value || []).filter(s => s.label.toLowerCase().includes(supplierSearchTerm.value.toLowerCase()))
 );
 
 const addCategory = async () => {
@@ -297,9 +298,9 @@ const handleInventoryEntrySave = () => {
                 </CardContent>
 
                 <CardFooter class="mt-4 flex flex-col items-center gap-4">
-                    <div class="flex w-full items-start gap-2">
-                        <div class="flex-1">
-                             <Select v-model="detailForm.supplier_id">
+                     <div class="flex w-full items-start gap-2">
+                        <div class="flex flex-1 items-center gap-2">
+                            <Select v-model="detailForm.supplier_id">
                                 <SelectTrigger>
                                     <SelectValue placeholder="Yetkazib beruvchi tanlang" />
                                 </SelectTrigger>
@@ -312,10 +313,10 @@ const handleInventoryEntrySave = () => {
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
+                            <Button type="button" @click="showSupplierModal = true" size="icon" class="flex-shrink-0">+</Button>
                         </div>
-                        <Button type="button" @click="showSupplierModal = true" size="icon" class="flex-shrink-0">+</Button>
                         <div class="flex-1">
-                            <Textarea v-model="detailForm.comment" placeholder="Izoh......." rows="1" />
+                            <Textarea v-model="detailForm.comment" placeholder="Izoh......." />
                         </div>
                     </div>
                     <div class="flex w-full items-center justify-between">
