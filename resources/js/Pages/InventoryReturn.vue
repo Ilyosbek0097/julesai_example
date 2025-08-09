@@ -35,6 +35,8 @@ const form = useForm({
         quantity: number;
         product_name: string;
         max_quantity: number;
+        price: number;
+        created_at: string;
     }[],
     comment: ''
 })
@@ -70,7 +72,9 @@ function addReturnItem(detail: any) {
         output_detail_id: detail.id,
         quantity: 1,
         product_name: detail.inventory_entry.product_name,
-        max_quantity: detail.quantity
+        max_quantity: detail.quantity,
+        price: detail.price,
+        created_at: detail.created_at
     });
     toast.success('Mahsulot qoʻshildi!', {
         description: `"${detail.inventory_entry.product_name}" qaytarish roʻyxatiga qoʻshildi.`
@@ -165,7 +169,7 @@ watch(() => form.returns, (newReturns, oldReturns) => {
                             :key="o.id"
                             :value="o.id"
                         >
-                            {{ o.output_number }} - {{ o.formatted_date }}
+                            {{ o.output_number }} - {{ o.formatted_date }} - {{ o.comment }}
                         </SelectItem>
                     </SelectContent>
                 </Select>
@@ -216,6 +220,8 @@ watch(() => form.returns, (newReturns, oldReturns) => {
                         <TableRow>
                             <TableHead>Mahsulot</TableHead>
                             <TableHead>Sotilgan Miqdor</TableHead>
+                            <TableHead>Narx</TableHead>
+                            <TableHead>Sana</TableHead>
                             <TableHead>Qaytariladigan Miqdor</TableHead>
                             <TableHead></TableHead>
                         </TableRow>
@@ -230,6 +236,12 @@ watch(() => form.returns, (newReturns, oldReturns) => {
                             </TableCell>
                             <TableCell class="font-medium">
                                 {{ item.max_quantity }}
+                            </TableCell>
+                             <TableCell>
+                                {{ item.price }}
+                            </TableCell>
+                            <TableCell>
+                                {{ item.created_at }}
                             </TableCell>
                             <TableCell>
                                 <Input
