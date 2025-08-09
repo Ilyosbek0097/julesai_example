@@ -56,7 +56,7 @@ const selectedOutput = computed(() => {
 })
 
 const hasInvalidQuantities = computed(() => {
-    return form.returns.some(item => !item.quantity || item.quantity < 1 || item.quantity > item.max_quantity);
+    return form.returns.some(item => !item.quantity || item.quantity < 0.01 || item.quantity > item.max_quantity);
 });
 
 function addReturnItem(detail: any) {
@@ -112,6 +112,14 @@ function submitForm() {
 // Watch for changes in return quantities to enforce validation
 watch(() => form.returns, (newReturns, oldReturns) => {
     newReturns.forEach((item, index) => {
+        if (item.quantity === null || item.quantity === undefined) return;
+
+        // Round to 2 decimal places to prevent more than 2 digits after comma
+        const roundedQuantity = parseFloat(Number(item.quantity).toFixed(2));
+        if (item.quantity !== roundedQuantity) {
+            item.quantity = roundedQuantity;
+        }
+
         const oldItem = oldReturns.find(o => o.output_detail_id === item.output_detail_id);
         const oldValue = oldItem ? oldItem.quantity : 0;
 
@@ -123,11 +131,11 @@ watch(() => form.returns, (newReturns, oldReturns) => {
                 });
             }
         }
-        if (item.quantity && item.quantity < 1) {
-            item.quantity = 1;
-             if (oldValue !== 1) {
+        if (item.quantity < 0.01) {
+            item.quantity = 0.01;
+             if (oldValue !== 0.01) {
                 toast.warning('Miqdor cheklandi!', {
-                    description: `Minimal miqdor 1 dona bo'lishi kerak.`
+                    description: `Minimal miqdor 0.01 bo'lishi kerak.`
                 });
             }
         }
@@ -227,7 +235,8 @@ watch(() => form.returns, (newReturns, oldReturns) => {
                                 <Input
                                     type="number"
                                     v-model.number="item.quantity"
-                                    min="1"
+                                    step="0.01"
+                                    min="0.01"
                                     :max="item.max_quantity"
                                     class="w-24"
                                 />
