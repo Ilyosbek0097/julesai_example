@@ -23,14 +23,15 @@ import {
 } from '@/components/ui/dialog';
 
 const props = defineProps<{
+    inventory: any;
     categories: any[];
     units: any[];
 }>();
 
 const form = useForm({
-    name: '',
-    category_id: null,
-    unit_id: null,
+    name: props.inventory.name,
+    category_id: props.inventory.category_id,
+    unit_id: props.inventory.unit_id,
 });
 
 // Options for selects
@@ -90,22 +91,22 @@ const addUnit = async () => {
 };
 
 const submit = () => {
-    form.post(route('inventories.store'), {
+    form.put(route('inventories.update', props.inventory.id), {
         onSuccess: () => {
-            toast.success('Mahsulot muvaffaqiyatli saqlandi!');
+            toast.success('Mahsulot muvaffaqiyatli yangilandi!');
         },
     });
 };
 </script>
 
 <template>
-    <Head title="Yangi Mahsulot Qo'shish" />
+    <Head title="Mahsulotni Tahrirlash" />
 
     <AppLayout>
         <div class="max-w-2xl mx-auto py-8 px-4">
             <Card>
                 <CardHeader>
-                    <CardTitle>Yangi Mahsulot Qo‘shish</CardTitle>
+                    <CardTitle>Mahsulotni Tahrirlash</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <form @submit.prevent="submit" class="space-y-6">
@@ -159,7 +160,7 @@ const submit = () => {
 
                         <div class="flex justify-end">
                             <Button type="submit" :disabled="form.processing">
-                                Saqlash
+                                Yangilash
                             </Button>
                         </div>
                     </form>
