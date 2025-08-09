@@ -3,8 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useForm } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -35,7 +37,6 @@ const detailForm = useForm({
 const toggleBlok = ref(false);
 const categoryOptions = ref(props?.categories?.map((cat: any) => ({ label: cat.name, value: cat.id })));
 const unitOptions = ref(props?.units?.map((unit: any) => ({ label: unit.name, value: unit.id })));
-// const productOptions = ref(props?.products?.map((prod: any) => ({ label: prod.name, value: prod.id })));
 const productOptions = computed(() =>
     props.products?.map((prod: any) => ({ label: prod.name, value: prod.id }))
 );
@@ -113,18 +114,15 @@ const selectedProductIds = computed(() => detailForm.items.map((item) => item.pr
 const handleSaveProduct = () => {
     if (form.processing) return;
     form.post(route('inventories.store'), {
-        onSuccess: (success) => {
-            console.log(success);
+        onSuccess: () => {
             toast.success('Maʼlumot muvaffaqiyatli saqlandi!');
         },
-        onError: (error) => {
-            console.log(error);
+        onError: () => {
             toast.error('Xatolik yuz berdi, iltimos tekshirib qayta urinib ko‘ring.');
         },
     });
 };
 const handleInventoryEntrySave = () => {
-    console.log('value', detailForm);
     // 1. Butun items massivi bo‘sh bo‘lsa — to‘xtatamiz
     if (detailForm.items.length === 0) {
         toast.error('Iltimos, kamida bitta mahsulot kiriting!');
@@ -298,9 +296,9 @@ const handleInventoryEntrySave = () => {
                     </Table>
                 </CardContent>
 
-                <CardFooter class="mt-4 flex flex-col items-start gap-4">
+                <CardFooter class="mt-4 flex flex-col items-center gap-4">
                     <div class="flex w-full items-start gap-2">
-                        <div class="w-1/2">
+                        <div class="flex-1">
                              <Select v-model="detailForm.supplier_id">
                                 <SelectTrigger>
                                     <SelectValue placeholder="Yetkazib beruvchi tanlang" />
@@ -315,7 +313,7 @@ const handleInventoryEntrySave = () => {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <Button type="button" @click="showSupplierModal = true" size="icon">+</Button>
+                        <Button type="button" @click="showSupplierModal = true" size="icon" class="flex-shrink-0">+</Button>
                         <div class="flex-1">
                             <Textarea v-model="detailForm.comment" placeholder="Izoh......." rows="1" />
                         </div>
