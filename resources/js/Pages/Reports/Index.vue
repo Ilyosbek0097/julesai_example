@@ -40,6 +40,10 @@ const reportOptions = [
     { value: 'returns', label: 'Qaytarishlar hisoboti' },
 ];
 
+const showDatePickers = computed(() => {
+    return !['stock', 'consolidated'].includes(form.type);
+});
+
 const submit = () => {
     form.get(route('reports.generate'));
 };
@@ -80,12 +84,12 @@ const downloadExcel = () => {
                             </Select>
                         </div>
 
-                        <div v-if="form.type !== 'stock' && form.type !== 'consolidated'">
+                        <div v-if="showDatePickers">
                              <label for="from_date">Dan</label>
                              <Input id="from_date" type="date" v-model="form.from_date" />
                         </div>
 
-                        <div v-if="form.type !== 'stock' && form.type !== 'consolidated'">
+                        <div v-if="showDatePickers">
                             <label for="to_date">Gacha</label>
                             <Input id="to_date" type="date" v-model="form.to_date" />
                         </div>
