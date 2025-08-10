@@ -109,7 +109,7 @@ const downloadExcel = () => {
                 </CardContent>
             </Card>
 
-            <div v-if="report_data" class="mt-8">
+            <div v-if="Array.isArray(report_data)" class="mt-8">
                 <Card>
                     <CardHeader>
                         <CardTitle>Hisobot Natijasi</CardTitle>
