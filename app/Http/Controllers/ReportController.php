@@ -21,7 +21,7 @@ class ReportController extends Controller
     public function generate(Request $request)
     {
         $validated = $request->validate([
-            'type' => 'required|string|in:stock,entries,outputs,returns',
+            'type' => 'required|string|in:stock,entries,outputs,returns,consolidated',
             'from_date' => 'sometimes|required_if:type,entries,outputs,returns|date',
             'to_date' => 'sometimes|required_if:type,entries,outputs,returns|date|after_or_equal:from_date',
         ]);
@@ -34,6 +34,33 @@ class ReportController extends Controller
         $columns = [];
 
         switch ($type) {
+            case 'consolidated':
+                $columns = ['Mahsulot', 'Kirim', 'Chiqim', 'Qaytish', 'Sof chiqim', 'Qoldiq', 'Qoldiq summasi'];
+                $data = Inventory::with('unit', 'entries', 'entries.outputDetails.returnDetails')
+                    ->get()
+                    ->map(function ($inventory) {
+                        $total_entries = $inventory->entries()->sum('quantity');
+                        $total_outputs = $inventory->entries()->withSum('outputDetails', 'quantity')->get()->sum('output_details_sum_quantity');
+                        $total_returns = $inventory->entries()->withSum('outputDetails as return_details_sum_quantity', 'returnDetails.quantity')->get()->sum('return_details_sum_quantity');
+
+                        $net_output = $total_outputs - $total_returns;
+                        $remaining_stock = $total_entries - $net_output;
+
+                        $avg_price = $inventory->entries()->avg('unit_price') ?? 0;
+                        $remaining_value = $remaining_stock * $avg_price;
+
+                        return [
+                            'Mahsulot' => $inventory->name . ' (' . $inventory->unit->name . ')',
+                            'Kirim' => $total_entries,
+                            'Chiqim' => $total_outputs,
+                            'Qaytish' => $total_returns,
+                            'Sof chiqim' => $net_output,
+                            'Qoldiq' => $remaining_stock,
+                            'Qoldiq summasi' => number_format($remaining_value, 2) . ' so‘m',
+                        ];
+                    });
+                break;
+
             case 'stock':
                 $columns = ['Mahsulot', 'Hozirgi Qoldiq'];
                 $data = Inventory::with('unit')->get()->map(function ($inventory) {
@@ -106,6 +133,32 @@ class ReportController extends Controller
 
         // This logic is duplicated from generate(). It could be refactored into a private method.
         switch ($type) {
+            case 'consolidated':
+                 $columns = ['Mahsulot', 'Kirim', 'Chiqim', 'Qaytish', 'Sof chiqim', 'Qoldiq', 'Qoldiq summasi'];
+                $data = Inventory::with('unit', 'entries', 'entries.outputDetails.returnDetails')
+                    ->get()
+                    ->map(function ($inventory) {
+                        $total_entries = $inventory->entries()->sum('quantity');
+                        $total_outputs = $inventory->entries()->withSum('outputDetails', 'quantity')->get()->sum('output_details_sum_quantity');
+                        $total_returns = $inventory->entries()->withSum('outputDetails as return_details_sum_quantity', 'returnDetails.quantity')->get()->sum('return_details_sum_quantity');
+
+                        $net_output = $total_outputs - $total_returns;
+                        $remaining_stock = $total_entries - $net_output;
+
+                        $avg_price = $inventory->entries()->avg('unit_price') ?? 0;
+                        $remaining_value = $remaining_stock * $avg_price;
+
+                        return [
+                            'Mahsulot' => $inventory->name . ' (' . $inventory->unit->name . ')',
+                            'Kirim' => $total_entries,
+                            'Chiqim' => $total_outputs,
+                            'Qaytish' => $total_returns,
+                            'Sof chiqim' => $net_output,
+                            'Qoldiq' => $remaining_stock,
+                            'Qoldiq summasi' => number_format($remaining_value, 2) . ' so‘m',
+                        ];
+                    });
+                break;
             case 'stock':
                 $columns = ['Mahsulot', 'Hozirgi Qoldiq'];
                 $data = Inventory::with('unit')->get()->map(function ($inventory) {

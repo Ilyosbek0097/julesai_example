@@ -34,6 +34,7 @@ const form = useForm({
 
 const reportOptions = [
     { value: 'stock', label: 'Ombor qoldig\'i' },
+    { value: 'consolidated', label: 'Svodniy hisobot' },
     { value: 'entries', label: 'Kirimlar hisoboti' },
     { value: 'outputs', label: 'Chiqimlar hisoboti' },
     { value: 'returns', label: 'Qaytarishlar hisoboti' },
@@ -79,12 +80,12 @@ const downloadExcel = () => {
                             </Select>
                         </div>
 
-                        <div v-if="form.type !== 'stock'">
+                        <div v-if="form.type !== 'stock' && form.type !== 'consolidated'">
                              <label for="from_date">Dan</label>
                              <Input id="from_date" type="date" v-model="form.from_date" />
                         </div>
 
-                        <div v-if="form.type !== 'stock'">
+                        <div v-if="form.type !== 'stock' && form.type !== 'consolidated'">
                             <label for="to_date">Gacha</label>
                             <Input id="to_date" type="date" v-model="form.to_date" />
                         </div>
