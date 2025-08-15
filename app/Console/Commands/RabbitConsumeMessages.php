@@ -67,8 +67,7 @@ class RabbitConsumeMessages extends Command
                     }
                 },
                 config('app.rabbitmq.queue', 'default_queue'),
-                100, // Batch size
-                5    // Timeout in seconds
+                100 // Batch size
             );
         } catch (\Exception $e) {
             Log::error('RabbitMQ consumer encountered a fatal error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
