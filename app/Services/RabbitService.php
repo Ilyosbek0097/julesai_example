@@ -83,12 +83,20 @@ class RabbitService
      * @param int $batchSize The maximum number of messages in a batch.
      * @param int $timeout The maximum time in seconds to wait for a batch to fill up.
      */
-    public function consumeBulk(callable $callback, string $queue = null, int $batchSize = 100, int $timeout = 10)
+    public function consumeBulk(callable $callback, string $queue = null, int $batchSize = 100)
     {
         try {
             $queue = $queue ?? config('app.rabbitmq.queue', 'default_queue');
             $batch = [];
-            $batchStartTime = null;
+
+            // Register a shutdown function to process the final partial batch.
+            // This ensures messages aren't lost when the worker is gracefully restarted.
+            register_shutdown_function(function () use (&$batch, $callback) {
+                if (!empty($batch)) {
+                    Log::info('Processing final batch on shutdown.', ['size' => count($batch)]);
+                    $callback($batch);
+                }
+            });
 
             $this->channel->basic_consume(
                 $queue,
@@ -97,32 +105,20 @@ class RabbitService
                 false, // auto-ack is false
                 false,
                 false,
-                function ($message) use (&$batch, &$batchStartTime) {
+                function ($message) use (&$batch, $callback, $batchSize) {
                     $batch[] = $message;
-                    if ($batchStartTime === null) {
-                        $batchStartTime = microtime(true);
+                    if (count($batch) >= $batchSize) {
+                        Log::info('Processing full batch.', ['size' => count($batch)]);
+                        $callback($batch);
+                        $batch = []; // Reset batch
                     }
                 }
             );
 
-            // The main consuming loop.
+            // Loop and wait indefinitely for messages.
+            // The heartbeat setting on the connection will keep it alive.
             while ($this->channel->is_consuming()) {
-                // Wait for messages, with a timeout.
-                // The heartbeat setting on the connection prevents this from causing a connection timeout.
-                $this->channel->wait(null, false, $timeout);
-
-                $batchFull = count($batch) >= $batchSize;
-                $timeoutReached = $batchStartTime !== null && (microtime(true) - $batchStartTime) > $timeout;
-
-                // Process the batch if it's full OR if the timeout is reached (for low-traffic periods).
-                if (!empty($batch) && ($batchFull || $timeoutReached)) {
-                    Log::info('Processing batch.', ['size' => count($batch), 'reason' => $batchFull ? 'full' : 'timeout']);
-                    $callback($batch);
-
-                    // Reset for the next batch.
-                    $batch = [];
-                    $batchStartTime = null;
-                }
+                $this->channel->wait();
             }
         } catch (\Exception $e) {
             Log::error('Error consuming messages', ['exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
