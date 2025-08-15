@@ -39,7 +39,16 @@ class RabbitService
                 config('app.rabbitmq.port', 5672),
                 config('app.rabbitmq.user', 'guest'),
                 config('app.rabbitmq.password', 'guest'),
-                config('app.rabbitmq.vhost', '/')
+                config('app.rabbitmq.vhost', '/'),
+                false,      // insistent
+                'AMQPLAIN', // login_method
+                null,       // login_response
+                'en_US',    // locale
+                30.0,       // connection_timeout
+                130.0,      // read_write_timeout -> Should be > 2 * heartbeat
+                null,       // context
+                false,      // keepalive
+                60          // heartbeat
             );
             $this->channel = $this->connection->channel();
             $this->channel->basic_qos(null, 100, null); // Prefetch 100 messages
