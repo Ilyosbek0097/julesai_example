@@ -60,9 +60,10 @@ class RabbitConsumeMessages extends Command
                         $channel->basic_ack($deliveryTag, true); // true for 'multiple'
                         Log::info('Batch processed and acknowledged successfully.', ['count' => count($batch)]);
                     } else {
-                        // Reject all messages in the batch and requeue them
-                        $channel->basic_nack($deliveryTag, true, true); // true for 'multiple', true for 'requeue'
-                        Log::error('Batch failed to process, nacking and requeueing.', ['count' => count($batch)]);
+                        // On failure, acknowledge the messages anyway to remove them from the queue
+                        // and prevent infinite requeue loops, as per user request.
+                        $channel->basic_ack($deliveryTag, true); // true for 'multiple'
+                        Log::error('Batch failed to process, acknowledging to discard messages.', ['count' => count($batch)]);
                     }
                 },
                 config('app.rabbitmq.queue', 'default_queue'),
