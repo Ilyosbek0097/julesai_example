@@ -30,33 +30,42 @@ class AccountService
      */
     public function upsertBulkAccountsHistory(array $bulkData = [])
     {
-        $preparedData = [];
+        $uniqueRecords = [];
         foreach ($bulkData as $record) {
             // Basic validation to ensure key fields exist.
             $isMatched = isset($record['accExternal']) && !is_null($record['operDay']);
 
             if ($isMatched) {
                 // Prepare the data for upsert.
-                $preparedData[] = $this->arrayOptimize($record);
+                $preparedRecord = $this->arrayOptimize($record);
+
+                // Create a unique key to handle duplicates within the batch.
+                // This ensures only the last record for a given composite key is kept.
+                $compositeKey = $preparedRecord['accExternal'] . '_' . $preparedRecord['operDay'];
+                $uniqueRecords[$compositeKey] = $preparedRecord;
+
             } else {
                 Log::info('upsertBulkAccountsHistory: Record skipped due to missing fields', ['data' => $record]);
             }
         }
 
-        if (empty($preparedData)) {
+        if (empty($uniqueRecords)) {
             Log::info('upsertBulkAccountsHistory: No valid data to upsert.');
             return true; // Nothing to do, so operation is "successful".
         }
 
+        // Get the de-duplicated records ready for upsert.
+        $deduplicatedData = array_values($uniqueRecords);
+
         try {
-            // Perform a single bulk upsert operation.
-            return $this->handleTransaction(function () use ($preparedData) {
+            // Perform a single bulk upsert operation with the de-duplicated data.
+            return $this->handleTransaction(function () use ($deduplicatedData) {
                 $result = AccountsHistory::upsert(
-                    $preparedData,
+                    $deduplicatedData,
                     ['accExternal', 'operDay']
                 );
                 Log::debug('AccountsHistory: Bulk upsert completed.', [
-                    'record_count' => count($preparedData),
+                    'record_count' => count($deduplicatedData),
                     'result' => $result,
                 ]);
                 return (bool)$result;
@@ -64,7 +73,7 @@ class AccountService
         } catch (\Exception $e) {
             Log::error('AccountsHistory: Error during bulk upsert', [
                 'exception' => $e->getMessage(),
-                'record_count' => count($preparedData),
+                'record_count' => count($deduplicatedData),
             ]);
             return false;
         }
