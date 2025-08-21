@@ -129,17 +129,21 @@ class ReportController extends Controller
                 break;
 
             case 'product_outputs':
-                $columns = ['Chiqim Raqami', 'Sana', 'Miqdori', 'Narxi', 'Umumiy'];
-                $data = \App\Models\OutputDetail::whereHas('inventoryEntry', function ($query) use ($productId) {
-                        $query->where('inventory_id', $productId);
+                $columns = ['Chiqim Raqami', 'Sana', 'Mahsulot', 'Kategoriya', 'Birlik', 'Partiya Raqami', 'Miqdori', 'Narxi', 'Umumiy'];
+                $data = \App\Models\OutputDetail::whereHas('inventoryEntry.inventory', function ($query) use ($productId) {
+                        $query->where('id', $productId);
                     })
                     ->whereHas('inventoryOutput', function ($query) use ($fromDate, $toDate) {
                         $query->whereBetween('output_date', [$fromDate, $toDate]);
                     })
-                    ->with('inventoryOutput')
+                    ->with(['inventoryOutput', 'inventoryEntry.inventory.category', 'inventoryEntry.inventory.unit'])
                     ->get()->map(fn ($detail) => [
                         'Chiqim Raqami' => $detail->inventoryOutput->output_number,
                         'Sana' => $detail->inventoryOutput->output_date,
+                        'Mahsulot' => $detail->inventoryEntry->inventory->name,
+                        'Kategoriya' => $detail->inventoryEntry->inventory->category->name,
+                        'Birlik' => $detail->inventoryEntry->inventory->unit->name,
+                        'Partiya Raqami' => $detail->inventoryEntry->entry_number,
                         'Miqdori' => $detail->quantity,
                         'Narxi' => $detail->price,
                         'Umumiy' => $detail->total,
