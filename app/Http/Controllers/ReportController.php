@@ -15,14 +15,17 @@ class ReportController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Reports/Index');
+        return Inertia::render('Reports/Index', [
+            'inventories' => Inventory::all(['id', 'name']),
+        ]);
     }
 
     public function generate(Request $request)
     {
         $validated = $request->validate([
-            'type' => 'required|string|in:stock,entries,outputs,returns,consolidated',
-            'from_date' => 'sometimes|required_if:type,entries,outputs,returns|date',
+            'type' => 'required|string|in:stock,entries,outputs,returns,consolidated,product_outputs',
+            'product_id' => 'sometimes|required_if:type,product_outputs|exists:inventories,id',
+            'from_date' => 'sometimes|required_if:type,entries,outputs,returns,product_outputs|date',
             'to_date' => 'sometimes|required_if:type,entries,outputs,returns|date|after_or_equal:from_date',
         ]);
 
@@ -39,8 +42,9 @@ class ReportController extends Controller
     public function export(Request $request)
     {
         $validated = $request->validate([
-            'type' => 'required|string|in:stock,entries,outputs,returns,consolidated',
-            'from_date' => 'sometimes|required_if:type,entries,outputs,returns|date',
+            'type' => 'required|string|in:stock,entries,outputs,returns,consolidated,product_outputs',
+            'product_id' => 'sometimes|required_if:type,product_outputs|exists:inventories,id',
+            'from_date' => 'sometimes|required_if:type,entries,outputs,returns,product_outputs|date',
             'to_date' => 'sometimes|required_if:type,entries,outputs,returns|date|after_or_equal:from_date',
         ]);
 
@@ -49,7 +53,7 @@ class ReportController extends Controller
         return Excel::download(new ReportExport($report['data'], $report['columns']), 'hisobot-' . $validated['type'] . '-' . now()->format('Y-m-d') . '.xlsx');
     }
 
-    private function getReportData(string $type, ?string $fromDate, ?string $toDate): array
+    private function getReportData(string $type, ?string $fromDate, ?string $toDate, ?int $productId = null): array
     {
         $data = [];
         $columns = [];
@@ -121,6 +125,24 @@ class ReportController extends Controller
                         'Qaytarish Raqami' => $return->return_number,
                         'Sana' => $return->return_date,
                         'Izoh' => $return->comment,
+                    ]);
+                break;
+
+            case 'product_outputs':
+                $columns = ['Chiqim Raqami', 'Sana', 'Miqdori', 'Narxi', 'Umumiy'];
+                $data = \App\Models\OutputDetail::whereHas('inventoryEntry', function ($query) use ($productId) {
+                        $query->where('inventory_id', $productId);
+                    })
+                    ->whereHas('inventoryOutput', function ($query) use ($fromDate, $toDate) {
+                        $query->whereBetween('output_date', [$fromDate, $toDate]);
+                    })
+                    ->with('inventoryOutput')
+                    ->get()->map(fn ($detail) => [
+                        'Chiqim Raqami' => $detail->inventoryOutput->output_number,
+                        'Sana' => $detail->inventoryOutput->output_date,
+                        'Miqdori' => $detail->quantity,
+                        'Narxi' => $detail->price,
+                        'Umumiy' => $detail->total,
                     ]);
                 break;
         }

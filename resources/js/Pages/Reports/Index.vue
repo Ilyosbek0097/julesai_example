@@ -21,8 +21,10 @@ import {
 } from '@/components/ui/table';
 
 const props = defineProps<{
+    inventories?: any[];
     report_type?: string;
     report_data?: any[];
+    report_columns?: string[];
     request_params?: any;
 }>();
 
@@ -30,6 +32,7 @@ const form = useForm({
     type: props.request_params?.type || 'stock',
     from_date: props.request_params?.from_date || new Date().toISOString().slice(0, 10),
     to_date: props.request_params?.to_date || new Date().toISOString().slice(0, 10),
+    product_id: props.request_params?.product_id || null,
 });
 
 const reportOptions = [
@@ -37,8 +40,13 @@ const reportOptions = [
     { value: 'consolidated', label: 'Svodniy hisobot' },
     { value: 'entries', label: 'Kirimlar hisoboti' },
     { value: 'outputs', label: 'Chiqimlar hisoboti' },
+    { value: 'product_outputs', label: 'Mahsulot bo\'yicha chiqimlar' },
     { value: 'returns', label: 'Qaytarishlar hisoboti' },
 ];
+
+const inventoryOptions = computed(() =>
+    (props.inventories || []).map(i => ({ label: i.name, value: i.id }))
+);
 
 const showDatePickers = computed(() => {
     return !['stock', 'consolidated'].includes(form.type);
@@ -51,9 +59,12 @@ const submit = () => {
 const downloadExcel = () => {
     const url = new URL(route('reports.export'));
     url.searchParams.append('type', form.type);
-    if (form.type !== 'stock') {
+    if (showDatePickers.value) {
         url.searchParams.append('from_date', form.from_date);
         url.searchParams.append('to_date', form.to_date);
+    }
+    if (form.type === 'product_outputs' && form.product_id) {
+        url.searchParams.append('product_id', form.product_id);
     }
     window.location.href = url.toString();
 };
@@ -92,6 +103,20 @@ const downloadExcel = () => {
                         <div v-if="showDatePickers">
                             <label for="to_date">Gacha</label>
                             <Input id="to_date" type="date" v-model="form.to_date" />
+                        </div>
+
+                        <div v-if="form.type === 'product_outputs'">
+                             <label for="product">Mahsulot</label>
+                             <Select v-model="form.product_id">
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Mahsulotni tanlang" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem v-for="option in inventoryOptions" :key="option.value" :value="option.value">
+                                        {{ option.label }}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div class="flex gap-2">
