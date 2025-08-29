@@ -56,6 +56,7 @@ const showEditModal = ref(false);
 const showSettingModal = ref(false);
 const templateId = ref(null);
 const incomeAccountOptions = ref([]);
+const searchTerm = ref(''); // State for the search input
 
 // Form Refs
 const cashBoxFormRef = ref(null);
@@ -72,10 +73,26 @@ const settingForm = ref({ incomeAccount: null, outgoingAccount: '' });
 const optionsCashBoxes = computed(() => props.cashBoxes);
 
 const dataTemplatesFilter = computed(() => {
+    let filtered = [];
     if (cashBoxChange.value) {
-        return props.dataTemplates.filter(d => d.cashboxId === cashBoxChange.value);
+        filtered = props.dataTemplates.filter(d => d.cashboxId === cashBoxChange.value);
     }
-    return [];
+
+    if (searchTerm.value && searchTerm.value.trim() !== '') {
+        const lowerCaseSearch = searchTerm.value.toLowerCase().trim();
+        return filtered.filter(template => {
+            // Search by template name and account numbers
+            const templateName = template.templateName?.toLowerCase() || '';
+            const incomeAcc = template.template_account?.income_account?.accExternal?.toLowerCase() || '';
+            const outgoingAcc = template.template_account?.outgoing_account?.accExternal?.toLowerCase() || '';
+
+            return templateName.includes(lowerCaseSearch) ||
+                   incomeAcc.includes(lowerCaseSearch) ||
+                   outgoingAcc.includes(lowerCaseSearch);
+        });
+    }
+
+    return filtered;
 });
 
 const railStyle = ({ focused, checked}) => {
@@ -119,10 +136,20 @@ const columns = computed(() => [
     {
         title: t('entryTemplate.action'),
         key: 'action',
-        render: (row) => h('div', { style: 'display: flex; gap: 8px;' }, [
-            h(NButton, { size: 'medium', text: true, type: 'info', onClick: () => onEdit(row.id) }, { icon: () => h(NIcon, null, { default: () => h(Pencil) }) }),
-            h(NButton, { size: 'medium', type: 'warning', text: true, onClick: () => onSettings(row.id) }, { icon: () => h(NIcon, null, { default: () => h(Settings) }) })
-        ])
+        render: (row) => {
+            const buttons = [
+                h(NButton, { size: 'medium', text: true, type: 'info', onClick: () => onEdit(row.id) }, { icon: () => h(NIcon, null, { default: () => h(Pencil) }) })
+            ];
+
+            // Only show the Settings button if no account is attached
+            if (!row.template_account) {
+                buttons.push(
+                    h(NButton, { size: 'medium', type: 'warning', text: true, onClick: () => onSettings(row.id) }, { icon: () => h(NIcon, null, { default: () => h(Settings) }) })
+                );
+            }
+
+            return h('div', { style: 'display: flex; gap: 8px;' }, buttons);
+        }
     }
 ]);
 
@@ -339,7 +366,19 @@ const settingFormRules = {
             </n-grid>
 
             <n-card v-if="cashBoxChange" class="mt-3">
-                <n-space align="center" justify="end" class="mb-4">
+<n-space align="center" justify="space-between" class="mb-4">
+    <n-input
+        round
+        clearable
+        :placeholder="t('search')"
+        v-model:value="searchTerm"
+        style="width: 300px;"
+    >
+        <template #prefix>
+            <n-icon><Search /></n-icon>
+        </template>
+    </n-input>
+
                     <n-button round type="success" @click="showAddModal = true">
                         <template #icon><n-icon><Plus /></n-icon></template>
                         {{ t('entryTemplate.add') }}
