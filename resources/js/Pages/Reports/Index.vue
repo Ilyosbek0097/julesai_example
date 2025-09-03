@@ -6,12 +6,20 @@ import {
     NCard, NBreadcrumb, NBreadcrumbItem, NForm, NFormItem, NDatePicker,
     NSelect, NButton, NSpace, NDataTable, useMessage
 } from "naive-ui";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import axios from 'axios';
 
 const { t } = useI18n();
 const message = useMessage();
 
+const props = defineProps({
+    cashBoxes: {
+        type: Object,
+        required: true
+    }
+});
+
+const cashboxOptions = computed(() => props.cashBoxes);
 const formRef = ref(null);
 const loading = ref(false);
 const reportData = ref([]);
@@ -19,6 +27,7 @@ const reportData = ref([]);
 const formModel = ref({
     dateRange: null,
     reportType: null,
+    cashboxId: null,
 });
 
 const reportTypeOptions = [
@@ -26,8 +35,6 @@ const reportTypeOptions = [
     { label: 'Chiqim Hisoboti', value: 'expense' },
     { label: 'Umumiy Hisobot', value: 'summary' },
 ];
-
-import { computed } from "vue";
 
 const columns = computed(() => {
     const type = formModel.value.reportType;
@@ -40,7 +47,7 @@ const columns = computed(() => {
             {
                 title: 'Summa',
                 key: 'amount',
-                render: (row) => new Intl.NumberFormat('uz-UZ').format(row.amount) // Formatting the number
+                render: (row) => new Intl.NumberFormat('uz-UZ').format(row.amount)
             },
         ];
     }
@@ -51,15 +58,16 @@ const columns = computed(() => {
             {
                 title: 'Jami Summa',
                 key: 'total_amount',
-                render: (row) => new Intl.NumberFormat('uz-UZ').format(row.total_amount) // Formatting the number
+                render: (row) => new Intl.NumberFormat('uz-UZ').format(row.total_amount)
             },
         ];
     }
 
-    return []; // Return empty array if no report type is selected
+    return [];
 });
 
 const rules = {
+    cashboxId: { required: true,  message: 'Iltimos Kassani tanlang', trigger: 'change', type: 'number' },
     dateRange: { required: true, message: 'Iltimos, sana oralig\'ini tanlang', trigger: 'change', type: 'array' },
     reportType: { required: true, message: 'Iltimos, hisobot turini tanlang', trigger: 'change' },
 };
@@ -73,12 +81,11 @@ const handleFormSubmit = () => {
         loading.value = true;
         reportData.value = [];
         try {
-            // Using a static URL as route() may not be available to axios.
-            // This endpoint needs to be created in the backend (web.php).
             const response = await axios.post('/reports/fetch', {
                 start_date: formModel.value.dateRange[0],
                 end_date: formModel.value.dateRange[1],
                 report_type: formModel.value.reportType,
+                cashbox_id: formModel.value.cashboxId, // Added cashboxId to the request
             });
             reportData.value = response.data;
             if (reportData.value.length === 0) {
@@ -99,7 +106,7 @@ const handleFormSubmit = () => {
     <MyLayout>
         <Head title="Hisobotlar" />
         <n-card class="min-h-screen">
-            <n-breadcrumb class="mb-4">
+             <n-breadcrumb class="mb-4">
                 <n-breadcrumb-item :href="route('dashboard')">{{ t("Sidebar.home") }}</n-breadcrumb-item>
                 <n-breadcrumb-item>Hisobotlar</n-breadcrumb-item>
             </n-breadcrumb>
@@ -107,6 +114,16 @@ const handleFormSubmit = () => {
             <n-card title="Hisobot Filtrlari">
                 <n-form ref="formRef" :model="formModel" :rules="rules" @submit.prevent="handleFormSubmit">
                     <n-space align="end">
+                          <n-form-item label="Kassa" path="cashboxId">
+                            <n-select
+                                v-model:value="formModel.cashboxId"
+                                :options="cashboxOptions"
+                                placeholder="Kassani Tanlang"
+                                style="width: 400px;"
+                                clearable
+                                filterable
+                            />
+                        </n-form-item>
                         <n-form-item label="Sana Oralig'i" path="dateRange">
                             <n-date-picker v-model:value="formModel.dateRange" type="daterange" clearable />
                         </n-form-item>
