@@ -1,0 +1,37 @@
+FROM hub-nx.hamkor.local/devops/webdevops/php-nginx:8.2-alpine
+
+ARG PROXY
+
+ENV WEB_DOCUMENT_ROOT=/var/www/public
+ENV PHP_DISPLAY_ERRORS=1
+ENV PHP_MEMORY_LIMIT=2048M
+ENV PHP_MAX_EXECUTION_TIME=-1
+
+COPY . /var/www/
+
+WORKDIR /var/www/
+
+# Install dependencies
+RUN export http_proxy=${PROXY} \
+    && export https_proxy=${PROXY} \
+    && cp .env.prod .env \
+    && composer install --no-interaction --no-progress --no-suggest \
+    && apk --no-cache add nodejs npm supervisor \
+    && npm install \
+    && npm run build \
+    && apk --no-cache del nodejs \
+    && rm -rf node_modules \
+    && php artisan key:generate \
+    && php artisan optimize:clear
+
+# Copy and set up supervisor
+COPY /supervisor/laravel_worker_supervisord.conf /opt/docker/etc/supervisor.d/laravel_worker_supervisord.conf
+RUN chmod 755 /opt/docker/etc/supervisor.d/laravel_worker_supervisord.conf
+
+# Copy and set up the entrypoint script to fix permissions
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Set the entrypoint to our script and the default command to supervisord
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["supervisord", "-n", "-c", "/opt/docker/etc/supervisor.d/laravel_worker_supervisord.conf"]
