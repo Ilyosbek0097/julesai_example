@@ -86,38 +86,48 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
                         // Headers
                         $sheet->getStyle("A{$sectionStart}")->applyFromArray($headerStyle);
                         if ($sectionHeight === self::ELON_ROWS) { // Only E'lon has sub-header
-                            $sheet->getStyle("A".($sectionStart + 1))->applyFromArray($subHeaderStyle);
+                             $sheet->getStyle("A".($sectionStart + 1))->applyFromArray($subHeaderStyle);
                         }
 
                         // Labels
-                        $sheet->getStyle("A".($sectionStart + 2))->applyFromArray($labelStyle); // Bank Nomi
-                        $sheet->getStyle("A".($sectionStart + 3))->applyFromArray($labelStyle); // Sana
-                        $sheet->getStyle("C".($sectionStart + 3))->applyFromArray($labelStyle); // Hujjat Raqami
-                        $sheet->getStyle("A".($sectionStart + 5))->applyFromArray($labelStyle); // To'lovchi
-                        $sheet->getStyle("A".($sectionStart + 6))->applyFromArray($labelStyle); // To'lovchi hisobi
-                        $sheet->getStyle("A".($sectionStart + 7))->applyFromArray($labelStyle); // Maqsad
-                        $sheet->getStyle("A".($sectionStart + 9))->applyFromArray($labelStyle); // Oluvchi
-                        $sheet->getStyle("A".($sectionStart + 10))->applyFromArray($labelStyle); // Oluvchi hisobi
-                        $sheet->getStyle("A".($sectionStart + 12))->applyFromArray($labelStyle); // Summa soz
-                        $sheet->getStyle("A".($sectionStart + 13))->applyFromArray($labelStyle); // Summa raqam
-                        $sheet->getStyle("A".($sectionStart + 15))->applyFromArray($labelStyle); // Buxgalter
-                        $sheet->getStyle("C".($sectionStart + 15))->applyFromArray($labelStyle); // Kassir
+                        $sheet->getStyle("A".($sectionStart + 2))->applyFromArray($labelStyle);
+                        $sheet->getStyle("A".($sectionStart + 3))->applyFromArray($labelStyle);
+                        $sheet->getStyle("C".($sectionStart + 3))->applyFromArray($labelStyle);
+                        $sheet->getStyle("A".($sectionStart + 5))->applyFromArray($labelStyle);
+                        $sheet->getStyle("A".($sectionStart + 6))->applyFromArray($labelStyle);
+                        $sheet->getStyle("A".($sectionStart + 7))->applyFromArray($labelStyle);
+                        $sheet->getStyle("A".($sectionStart + 9))->applyFromArray($labelStyle);
+                        $sheet->getStyle("A".($sectionStart + 10))->applyFromArray($labelStyle);
+                        $sheet->getStyle("A".($sectionStart + 12))->applyFromArray($labelStyle);
+                        $sheet->getStyle("A".($sectionStart + 13))->applyFromArray($labelStyle);
+                        $sheet->getStyle("A".($sectionStart + 15))->applyFromArray($labelStyle);
+                        $sheet->getStyle("C".($sectionStart + 15))->applyFromArray($labelStyle);
 
-                        // Values with bottom borders to look like underlines
+                        // Values with bottom borders
                         $sheet->getStyle("C".($sectionStart + 2).":D".($sectionStart + 2))->applyFromArray($bottomBorderStyle);
                         $sheet->getStyle("B".($sectionStart + 3))->applyFromArray($bottomBorderStyle);
                         $sheet->getStyle("D".($sectionStart + 3))->applyFromArray($bottomBorderStyle);
                         $sheet->getStyle("C".($sectionStart + 5).":D".($sectionStart + 5))->applyFromArray($bottomBorderStyle);
                         $sheet->getStyle("C".($sectionStart + 6).":D".($sectionStart + 6))->applyFromArray($bottomBorderStyle);
-                        $sheet->getStyle("C".($sectionStart + 7).":D".($sectionStart + 7))->applyFromArray($valueStyle)->getStyle()->applyFromArray($bottomBorderStyle);
+
+                        // FIX: Separated the chained calls
+                        $maqsadStyle = $sheet->getStyle("C".($sectionStart + 7).":D".($sectionStart + 7));
+                        $maqsadStyle->applyFromArray($valueStyle);
+                        $maqsadStyle->getBorders()->getBottom()->setBorderStyle(Border::BORDER_THIN);
+
                         $sheet->getStyle("C".($sectionStart + 9).":D".($sectionStart + 9))->applyFromArray($bottomBorderStyle);
                         $sheet->getStyle("C".($sectionStart + 10).":D".($sectionStart + 10))->applyFromArray($bottomBorderStyle);
                         $sheet->getStyle("B".($sectionStart + 12).":D".($sectionStart + 12))->applyFromArray($bottomBorderStyle);
-                        $sheet->getStyle("B".($sectionStart + 13).":D".($sectionStart + 13))->applyFromArray($amountStyle)->getStyle()->applyFromArray($bottomBorderStyle);
+
+                        // FIX: Separated the chained calls
+                        $summaStyle = $sheet->getStyle("B".($sectionStart + 13).":D".($sectionStart + 13));
+                        $summaStyle->applyFromArray($amountStyle);
+                        $summaStyle->getBorders()->getBottom()->setBorderStyle(Border::BORDER_THIN);
+
                         $sheet->getStyle("B".($sectionStart + 15))->applyFromArray($bottomBorderStyle);
                         $sheet->getStyle("D".($sectionStart + 15))->applyFromArray($bottomBorderStyle);
 
-                        // Set row heights for better spacing
+                        // Set row heights
                         for ($r = 0; $r < $sectionHeight; $r++) {
                             $sheet->getRowDimension($sectionStart + $r)->setRowHeight(20);
                         }
