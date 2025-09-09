@@ -1,10 +1,12 @@
 <script setup>
 import { ref, watch, h } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
-import { NDataTable, NInput, NDatePicker, NButton, NSpace, NCard, NPagination, NIcon, NSelect } from 'naive-ui';
-import { PrintOutline as PrintIcon } from '@vicons/ionicons5';
+import { NDataTable, NInput, NDatePicker, NButton, NSpace, NCard, NPagination, NIcon, NSelect, useMessage } from 'naive-ui';
+import { PrintOutline as PrintIcon, DocumentTextOutline as ExcelIcon } from '@vicons/ionicons5';
 import throttle from 'lodash/throttle';
-import MyLayout from "@/Layouts/MyLayout.vue"; // Using MyLayout as per user's last snippet
+import axios from 'axios';
+import { saveAs } from 'file-saver';
+import MyLayout from "@/Layouts/MyLayout.vue";
 
 // Props from Laravel
 const props = defineProps({
@@ -22,6 +24,9 @@ const props = defineProps({
     },
 });
 
+const message = useMessage();
+const loadingExport = ref(false);
+
 // Refs for filters
 const search = ref(props.filters.search);
 const date = ref(props.filters.date);
@@ -29,6 +34,33 @@ const cashboxId = ref(props.filters.cashbox_id);
 
 // Ref for row selection
 const checkedRowKeys = ref([]);
+
+// Export handler
+const handleExport = async (ids) => {
+    if (!ids || ids.length === 0) {
+        message.warning("Eksport qilish uchun kamida bitta qator tanlanishi kerak.");
+        return;
+    }
+
+    loadingExport.value = true;
+    try {
+        const response = await axios.post(route('announce-templates.export'), {
+            ids: ids
+        }, {
+            responseType: 'blob', // Important for file downloads
+        });
+
+        saveAs(response.data, 'e_lonlar.xlsx');
+        message.success("Fayl muvaffaqiyatli eksport qilindi.");
+
+    } catch (error) {
+        console.error("Eksport qilishda xatolik:", error);
+        message.error("Eksport qilishda xatolik yuz berdi.");
+    } finally {
+        loadingExport.value = false;
+    }
+};
+
 
 // Data table columns definition
 const columns = [
@@ -75,7 +107,8 @@ const columns = [
                 {
                     size: 'small',
                     circle: true,
-                    onClick: () => console.log(`Printing row ${row.announce_template_id}`),
+                    onClick: () => handleExport([row.announce_template_id]),
+                    loading: loadingExport.value,
                 },
                 {
                     icon: () => h(NIcon, null, { default: () => h(PrintIcon) })
@@ -113,9 +146,15 @@ const handlePageChange = (page) => {
                     <NButton
                         type="primary"
                         :disabled="checkedRowKeys.length === 0"
-                        @click="() => console.log('Generating document for:', checkedRowKeys)"
+                        @click="() => handleExport(checkedRowKeys)"
+                        :loading="loadingExport"
                     >
-                        Hujjat Chiqarish
+                        <template #icon>
+                            <NIcon>
+                                <ExcelIcon />
+                            </NIcon>
+                        </template>
+                        Excelga Yuklash
                     </NButton>
                 </template>
 

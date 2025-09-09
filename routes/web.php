@@ -17,6 +17,9 @@ use App\Http\Controllers\AnnounceTemplateController;
 Route::get('/announce-templates', [AnnounceTemplateController::class, 'index'])
     ->name('announce-templates.index');
 
+Route::post('/announce-templates/export', [AnnounceTemplateController::class, 'export'])
+    ->name('announce-templates.export');
+
 // You might want a dashboard route as well
 Route::get('/', function () {
     // If you have a dashboard component, you can render it here.

@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use App\Exports\AnnounceTemplatesExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AnnounceTemplateController extends Controller
 {
@@ -62,5 +64,23 @@ class AnnounceTemplateController extends Controller
             'cashboxes' => $cashboxes,
             'filters' => $request->only(['search', 'date', 'cashbox_id']),
         ]);
+    }
+
+    /**
+     * Export selected announce templates to an Excel file.
+     *
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function export(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:announce_templates,announce_template_id',
+        ]);
+
+        $templates = AnnounceTemplate::whereIn('announce_template_id', $request->input('ids'))->get();
+
+        return Excel::download(new AnnounceTemplatesExport($templates), 'e_lonlar.xlsx');
     }
 }
