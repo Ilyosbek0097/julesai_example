@@ -51,6 +51,7 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
                 $boldishFont = ['font' => ['bold' => true, 'size' => 10]];
                 $centerAlign = ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER]];
                 $verticalCenter = ['alignment' => ['vertical' => Alignment::VERTICAL_CENTER]];
+                $wrapText = ['alignment' => ['wrapText' => true]];
                 $thinBorder = ['borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]];
                 $bottomBorder = ['borders' => ['bottom' => ['borderStyle' => Border::BORDER_THIN]]];
                 $outlineBorder = ['borders' => ['outline' => ['borderStyle' => Border::BORDER_THICK]]];
@@ -69,6 +70,7 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
                     $sheet->getStyle('A'.($startRow + 3).':F'.($startRow + 3))->applyFromArray($centerAlign);
                     $sheet->getStyle('K'.($startRow + 3).':P'.($startRow + 3))->applyFromArray($centerAlign)->applyFromArray($thinBorder);
 
+                    $sheet->getStyle('A'.($startRow + 4))->applyFromArray($smallFont); // Row 5 -> A5:B5 -> index 4
                     $sheet->getStyle('A'.($startRow + 4).':I'.($startRow + 4))->applyFromArray($bottomBorder);
                     $sheet->getStyle('C'.($startRow + 4).':K'.($startRow + 4))->applyFromArray($centerAlign);
                     $sheet->getStyle('L'.($startRow + 4).':P'.($startRow + 4))->applyFromArray($smallFont)->applyFromArray($centerAlign);
@@ -76,6 +78,7 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
                     $sheet->getStyle('K'.($startRow + 5).':P'.($startRow + 5))->applyFromArray($thinBorder);
 
                     $sheet->getRowDimension($startRow + 6)->setRowHeight(25);
+                    $sheet->getStyle('A'.($startRow + 6))->applyFromArray($smallFont); // Row 7 -> A7:C7 -> index 6
                     $sheet->getStyle('A'.($startRow + 6).':P'.($startRow + 13))->applyFromArray($verticalCenter);
 
                     $sheet->getStyle('A'.($startRow + 7))->applyFromArray($thinBorder);
@@ -86,7 +89,8 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
                     $sheet->getStyle('K'.($startRow + 7))->applyFromArray($boldFont);
                     $sheet->getStyle('L'.($startRow + 7).':P'.($startRow + 7))->applyFromArray($smallFont)->applyFromArray($centerAlign);
 
-                    $sheet->getStyle('A'.($startRow + 8).':B'.($startRow + 8))->applyFromArray($smallFont)->applyFromArray($boldishFont);
+                    $sheet->getRowDimension($startRow + 8)->setRowHeight(25); // Row 9
+                    $sheet->getStyle('A'.($startRow + 8).':B'.($startRow + 8))->applyFromArray($smallFont)->applyFromArray($boldishFont)->getAlignment()->setWrapText(true);
                     $sheet->getStyle('C'.($startRow + 8).':J'.($startRow + 8))->applyFromArray($centerAlign);
                     $sheet->getStyle('K'.($startRow + 8).':P'.($startRow + 8))->applyFromArray($thinBorder);
 
@@ -94,11 +98,14 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
                     $sheet->getStyle('A'.($startRow + 9).':C'.($startRow + 9))->applyFromArray($thinBorder);
                     $sheet->getStyle('D'.($startRow + 9).':P'.($startRow + 9))->applyFromArray($thinBorder);
 
-                    $sheet->getStyle('D'.($startRow + 10).':P'.($startRow + 10))->applyFromArray($thinBorder);
+                    $sheet->getStyle('A'.($startRow + 10).':B'.($startRow + 10))->applyFromArray($thinBorder);
+                    $sheet->getStyle('C'.($startRow + 10).':P'.($startRow + 10))->applyFromArray($thinBorder);
 
                     $sheet->getStyle('A'.($startRow + 11).':G'.($startRow + 11))->applyFromArray($bottomBorder);
 
-                    $sheet->getStyle('A'.($startRow + 12).':B'.($startRow + 13))->applyFromArray($smallFont)->applyFromArray($centerAlign);
+                    $sheet->getRowDimension($startRow + 12)->setRowHeight(25);
+                    $sheet->getRowDimension($startRow + 13)->setRowHeight(25);
+                    $sheet->getStyle('A'.($startRow + 12).':B'.($startRow + 13))->applyFromArray($smallFont)->applyFromArray($centerAlign)->getAlignment()->setWrapText(true);
                     $sheet->getStyle('F'.($startRow + 12).':G'.($startRow + 12))->applyFromArray($smallFont);
                     $sheet->getStyle('K'.($startRow + 12))->applyFromArray($smallFont);
 
