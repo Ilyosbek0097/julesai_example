@@ -44,8 +44,8 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
                 $sheet = $event->sheet->getDelegate();
                 $recordCount = count($this->templates);
 
-                // New calculation: 14 rows for E'lon, 14 for Kvitansiya, 1 for page break div
-                $rowsPerRecord = 29;
+                // New calculation: 14 for Elon, 14 for Kvitansiya, 14 for Order, 1 for page break
+                $rowsPerRecord = 43;
 
                 for ($i = 0; $i < $recordCount; $i++) {
                     $recordStartRow = ($i * $rowsPerRecord) + 1;
@@ -55,12 +55,16 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
                     $this->applySectionStyles($sheet, $elonStart);
 
                     // --- Kvitansiya Section ---
-                    $kvitansiyaStart = $elonStart + 14; // Starts immediately after E'lon's 14 rows
+                    $kvitansiyaStart = $elonStart + 14;
                     $this->applySectionStyles($sheet, $kvitansiyaStart);
 
                     // Apply specific bold style for "MO'" in Kvitansiya
                     $boldFont = ['font' => ['bold' => true]];
                     $sheet->getStyle('A'.($kvitansiyaStart + 12).':B'.($kvitansiyaStart + 13))->applyFromArray($boldFont);
+
+                    // --- Order Section ---
+                    $orderStart = $kvitansiyaStart + 14;
+                    $this->applySectionStyles($sheet, $orderStart);
                 }
             },
         ];
@@ -101,7 +105,7 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
         $sheet->getStyle('K'.($startRow + 7))->applyFromArray($boldFont);
         $sheet->getStyle('L'.($startRow + 7).':P'.($startRow + 7))->applyFromArray($smallFont);
 
-        $sheet->getRowDimension($startRow + 8)->setRowHeight(30);
+        $sheet->getRowDimension($startRow + 8)->setRowHeight(35); // Increased row 9 height
         $sheet->getStyle('A'.($startRow + 8).':B'.($startRow + 8))->applyFromArray($smallFont)->applyFromArray($boldishFont)->getAlignment()->setWrapText(true);
         $sheet->getStyle('K'.($startRow + 8).':P'.($startRow + 8))->applyFromArray($thinBorder);
 
