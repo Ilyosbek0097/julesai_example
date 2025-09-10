@@ -79,7 +79,7 @@ class AnnounceTemplateController extends Controller
             'ids.*' => 'integer|exists:announce_templates,announce_template_id',
         ]);
 
-        $templates = AnnounceTemplate::whereIn('announce_template_id', $request->input('ids'))->get();
+        $templates = AnnounceTemplate::with('cashbox')->whereIn('announce_template_id', $request->input('ids'))->get();
 
         return Excel::download(new AnnounceTemplatesExport($templates), 'e_lonlar.xlsx');
     }

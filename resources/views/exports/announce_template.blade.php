@@ -1,207 +1,114 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-</head>
 <body>
 @foreach($templates as $template)
-    <table style="width: 100%;">
-        {{-- Empty Row for spacing --}}
-        <tr><td colspan="16"></td></tr>
-
-        {{-- E'LON Header --}}
+    <table>
+        {{-- Row 1: Empty --}}
         <tr>
-            <td colspan="16" style="text-align: center; font-weight: bold; font-size: 14px;">E'LON</td>
-        </tr>
-        <tr>
-            <td colspan="16" style="text-align: center; font-weight: bold; font-size: 12px;">Naqd pul topshirish uchun</td>
+            <td colspan="16"></td>
         </tr>
 
-        {{-- Bank & Doc Info --}}
+        {{-- Row 2: Headers --}}
         <tr>
-            <td colspan="3">Bank nomi:</td>
-            <td colspan="5" style="background-color: #FFFF00;">{{-- Bank Name Placeholder --}}</td>
-            <td colspan="4"></td>
-            <td>Sana:</td>
-            <td colspan="2" style="background-color: #FFFF00;">{{ $template->currday ? (new DateTime($template->currday))->format('d.m.Y') : '' }}</td>
-        </tr>
-        <tr>
-            <td colspan="3"></td>
-            <td colspan="5"></td>
-            <td colspan="4"></td>
-            <td>Hujjat №:</td>
-            <td colspan="2" style="background-color: #FFFF00;">{{ $template->docnumb }}</td>
-        </tr>
-
-        {{-- Spacer Row --}}
-        <tr><td colspan="16" style="height: 10px;"></td></tr>
-
-        {{-- Main Content Table --}}
-        <tr>
-            <td colspan="2" style="font-weight: bold; text-align: center;">Debet</td>
-            <td colspan="6" style="font-weight: bold; text-align: center;">Kredit</td>
-            <td rowspan="2" colspan="2" style="font-weight: bold; text-align: center;">To'lov maqsadi</td>
-            <td rowspan="2" colspan="3" style="font-weight: bold; text-align: center;">Summa</td>
-            <td rowspan="2" colspan="3" style="font-weight: bold; text-align: center;">Valyuta kodi</td>
-        </tr>
-        <tr>
-            <td style="font-weight: bold; text-align: center;">Hisob</td>
-            <td style="font-weight: bold; text-align: center;">MFO</td>
-            <td style="font-weight: bold; text-align: center;">INN</td>
-            <td colspan="4" style="font-weight: bold; text-align: center;">Oluvchining nomi</td>
-            <td style="font-weight: bold; text-align: center;">Hisob</td>
-        </tr>
-        <tr>
-            <td style="background-color: #FFFF00;">{{ $template->coacc }}</td>
+            <td colspan="5">Naqd pullarni topshirish</td>
+            <td>E'LON №</td>
+            <td colspan="2"></td>
+            <td colspan="2">{{ $template->docnumb }}</td>
             <td></td>
-            <td style="background-color: #FFFF00;">{{-- Oluvchi INN Placeholder --}}</td>
-            <td colspan="4" style="background-color: #FFFF00;">{{ $template->coname }}</td>
-            <td style="background-color: #FFFF00;">{{ $template->clacc }}</td>
-            <td colspan="2" style="background-color: #FFFF00;">{{ $template->paypurpose }}</td>
-            <td colspan="3" style="background-color: #FFFF00;">{{ number_format($template->sumpay, 2, ',', ' ') }}</td>
-            <td colspan="3" style="background-color: #FFFF00;">{{-- Currency Code Placeholder --}}</td>
+            <td colspan="5">2-ilova</td>
         </tr>
 
-        {{-- Spacer Row --}}
-        <tr><td colspan="16" style="height: 10px;"></td></tr>
-
-        {{-- Summa so'z bilan --}}
+        {{-- Row 3: SUMMA Header --}}
         <tr>
-            <td colspan="3">Summa so'z bilan:</td>
-            <td colspan="13" style="background-color: #FFFF00;">{{-- Amount in words placeholder --}}</td>
+            <td colspan="10"></td>
+            <td colspan="6">SUMMA</td>
         </tr>
 
-        {{-- Spacer Row --}}
-        <tr><td colspan="16" style="height: 10px;"></td></tr>
-
-        {{-- Signatures --}}
+        {{-- Row 4: Date and Amount --}}
         <tr>
-            <td colspan="3">Bosh buxgalter:</td>
-            <td colspan="5">_________________</td>
-            <td colspan="3">Ijrochi:</td>
-            <td colspan="5">_________________</td>
-        </tr>
-
-        {{-- Spacer Row --}}
-        <tr><td colspan="16" style="height: 10px;"></td></tr>
-        <tr><td colspan="16" style="border-bottom: 1px dashed #000;"></td></tr>
-        <tr><td colspan="16" style="height: 10px;"></td></tr>
-
-        {{-- Kvitansiya Section --}}
-        <tr>
-            <td colspan="16" style="text-align: center; font-weight: bold; font-size: 14px;">KVITANSIYA</td>
-        </tr>
-        <tr>
-            <td colspan="3">Bank nomi:</td>
-            <td colspan="5" style="background-color: #FFFF00;">{{-- Bank Name Placeholder --}}</td>
+            <td colspan="6">{{ $template->currday ? (new DateTime($template->currday))->format('d.m.Y') : '' }}</td>
             <td colspan="4"></td>
-            <td>Sana:</td>
-            <td colspan="2" style="background-color: #FFFF00;">{{ $template->currday ? (new DateTime($template->currday))->format('d.m.Y') : '' }}</td>
+            <td colspan="6">{{ number_format($template->sumpay, 2, ',', ' ') }}</td>
         </tr>
+
+        {{-- Row 5: Payer --}}
         <tr>
-            <td colspan="3"></td>
+            <td colspan="2">Naqd pul topshiruvchi:</td>
+            <td colspan="9">{{ $template->clname }}</td>
+            <td colspan="5">Дебет</td>
+        </tr>
+
+        {{-- Row 6: COA Account --}}
+        <tr>
+            <td colspan="10"></td>
+            <td colspan="6">{{ $template->coacc }}</td>
+        </tr>
+
+        {{-- Row 7: Bank Name --}}
+        <tr>
+            <td colspan="3">Qabul qiluvchi bank nomi</td>
+            <td colspan="8">{{ $template->cashbox->label ?? '' }}</td>
             <td colspan="5"></td>
-            <td colspan="4"></td>
-            <td>Hujjat №:</td>
-            <td colspan="2" style="background-color: #FFFF00;">{{ $template->docnumb }}</td>
         </tr>
+
+        {{-- Row 8: Bank/BXM Codes --}}
         <tr>
-            <td colspan="2" style="font-weight: bold; text-align: center;">Debet</td>
-            <td colspan="6" style="font-weight: bold; text-align: center;">Kredit</td>
-            <td rowspan="2" colspan="2" style="font-weight: bold; text-align: center;">To'lov maqsadi</td>
-            <td rowspan="2" colspan="3" style="font-weight: bold; text-align: center;">Summa</td>
-            <td rowspan="2" colspan="3" style="font-weight: bold; text-align: center;">Valyuta kodi</td>
-        </tr>
-        <tr>
-            <td style="font-weight: bold; text-align: center;">Hisob</td>
-            <td style="font-weight: bold; text-align: center;">MFO</td>
-            <td style="font-weight: bold; text-align: center;">INN</td>
-            <td colspan="4" style="font-weight: bold; text-align: center;">Oluvchining nomi</td>
-            <td style="font-weight: bold; text-align: center;">Hisob</td>
-        </tr>
-        <tr>
-            <td style="background-color: #FFFF00;">{{ $template->coacc }}</td>
             <td></td>
-            <td style="background-color: #FFFF00;">{{-- Oluvchi INN Placeholder --}}</td>
-            <td colspan="4" style="background-color: #FFFF00;">{{ $template->coname }}</td>
-            <td style="background-color: #FFFF00;">{{ $template->clacc }}</td>
-            <td colspan="2" style="background-color: #FFFF00;">{{ $template->paypurpose }}</td>
-            <td colspan="3" style="background-color: #FFFF00;">{{ number_format($template->sumpay, 2, ',', ' ') }}</td>
-            <td colspan="3" style="background-color: #FFFF00;">{{-- Currency Code Placeholder --}}</td>
-        </tr>
-        <tr>
-            <td colspan="3">Summa so'z bilan:</td>
-            <td colspan="13" style="background-color: #FFFF00;">{{-- Amount in words placeholder --}}</td>
-        </tr>
-        <tr>
-            <td colspan="3">Bosh buxgalter:</td>
-            <td colspan="5">_________________</td>
-            <td colspan="3">Kassir:</td>
-            <td colspan="5">_________________</td>
+            <td>Bank kodi</td>
+            <td colspan="2"></td>
+            <td colspan="4">00083</td>
+            <td colspan="2">BXM kodi</td>
+            <td>{{ $template->branchid }}</td>
+            <td colspan="5">KREDIT</td>
         </tr>
 
-        {{-- Spacer Row --}}
-        <tr><td colspan="16" style="height: 10px;"></td></tr>
-        <tr><td colspan="16" style="border-bottom: 1px dashed #000;"></td></tr>
-        <tr><td colspan="16" style="height: 10px;"></td></tr>
+        {{-- Row 9: Payer Name and Account --}}
+        <tr>
+            <td colspan="2">Pul kirim qilinadigan xoʻjalik subyekti nomi va x/r</td>
+            <td colspan="8">{{ $template->clname }}</td>
+            <td colspan="6">{{ $template->clacc }}</td>
+        </tr>
 
-        {{-- Order Section --}}
+        {{-- Row 10: Amount in Words --}}
         <tr>
-            <td colspan="16" style="text-align: center; font-weight: bold; font-size: 14px;">ORDER</td>
+            <td colspan="3">Summa soʻz bilan -</td>
+            <td colspan="13">summa so'z bilan - {{ number_format($template->sumpay, 2, ',', ' ') }}</td>
         </tr>
+
+        {{-- Row 11: Payment Purpose --}}
         <tr>
-            <td colspan="3">Bank nomi:</td>
-            <td colspan="5" style="background-color: #FFFF00;">{{-- Bank Name Placeholder --}}</td>
+            <td colspan="2">To'lov maqsadi</td>
+            <td colspan="14">{{ $template->paypurpose }}</td>
+        </tr>
+
+        {{-- Row 12: Empty with underline --}}
+        <tr>
+            <td colspan="7"></td>
+            <td colspan="9"></td>
+        </tr>
+
+        {{-- Row 13 & 14: Signatures --}}
+        <tr>
+            <td colspan="2" rowspan="2">naqd pulni topshiruvchi shaxs imzosi:</td>
+            <td colspan="3" rowspan="2"></td>
+            <td colspan="2">Buxgalter:</td>
             <td colspan="4"></td>
-            <td>Sana:</td>
-            <td colspan="2" style="background-color: #FFFF00;">{{ $template->currday ? (new DateTime($template->currday))->format('d.m.Y') : '' }}</td>
-        </tr>
-        <tr>
-            <td colspan="3"></td>
-            <td colspan="5"></td>
+            <td>Kassir:</td>
             <td colspan="4"></td>
-            <td>Hujjat №:</td>
-            <td colspan="2" style="background-color: #FFFF00;">{{ $template->docnumb }}</td>
         </tr>
         <tr>
-            <td colspan="2" style="font-weight: bold; text-align: center;">Debet</td>
-            <td colspan="6" style="font-weight: bold; text-align: center;">Kredit</td>
-            <td rowspan="2" colspan="2" style="font-weight: bold; text-align: center;">To'lov maqsadi</td>
-            <td rowspan="2" colspan="3" style="font-weight: bold; text-align: center;">Summa</td>
-            <td rowspan="2" colspan="3" style="font-weight: bold; text-align: center;">Valyuta kodi</td>
-        </tr>
-        <tr>
-            <td style="font-weight: bold; text-align: center;">Hisob</td>
-            <td style="font-weight: bold; text-align: center;">MFO</td>
-            <td style="font-weight: bold; text-align: center;">INN</td>
-            <td colspan="4" style="font-weight: bold; text-align: center;">Oluvchining nomi</td>
-            <td style="font-weight: bold; text-align: center;">Hisob</td>
-        </tr>
-        <tr>
-            <td style="background-color: #FFFF00;">{{ $template->coacc }}</td>
+            {{-- This empty tr is necessary for the rowspan to work correctly with the cells beside it --}}
+            <td colspan="2"></td>
+            <td colspan="4"></td>
             <td></td>
-            <td style="background-color: #FFFF00;">{{-- Oluvchi INN Placeholder --}}</td>
-            <td colspan="4" style="background-color: #FFFF00;">{{ $template->coname }}</td>
-            <td style="background-color: #FFFF00;">{{ $template->clacc }}</td>
-            <td colspan="2" style="background-color: #FFFF00;">{{ $template->paypurpose }}</td>
-            <td colspan="3" style="background-color: #FFFF00;">{{ number_format($template->sumpay, 2, ',', ' ') }}</td>
-            <td colspan="3" style="background-color: #FFFF00;">{{-- Currency Code Placeholder --}}</td>
+            <td colspan="4"></td>
         </tr>
-        <tr>
-            <td colspan="3">Summa so'z bilan:</td>
-            <td colspan="13" style="background-color: #FFFF00;">{{-- Amount in words placeholder --}}</td>
-        </tr>
-        <tr>
-            <td colspan="3">Bosh buxgalter:</td>
-            <td colspan="5">_________________</td>
-            <td colspan="3">Kassir:</td>
-            <td colspan="5">_________________</td>
-        </tr>
+    </table>
 
-        {{-- Page break if not the last record --}}
-        @if (!$loop->last)
-            <div style="page-break-after: always;"></div>
-        @endif
-    @endforeach
+    {{-- Page break for multi-record exports --}}
+    @if (!$loop->last)
+        <div style="page-break-after: always;"></div>
+    @endif
+@endforeach
 </body>
 </html>

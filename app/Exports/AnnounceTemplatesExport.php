@@ -5,12 +5,13 @@ namespace App\Exports;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithStyles
+class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
 {
     protected $templates;
 
@@ -19,9 +20,6 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithStyles
         $this->templates = $templates;
     }
 
-    /**
-     * @return View
-     */
     public function view(): View
     {
         return view('exports.announce_template', [
@@ -29,46 +27,84 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithStyles
         ]);
     }
 
-    /**
-     * @return array
-     */
     public function columnWidths(): array
     {
-        // A to P
+        // A to P, adjusted for visual balance
         return [
-            'A' => 5, 'B' => 10, 'C' => 10, 'D' => 10,
-            'E' => 10, 'F' => 10, 'G' => 10, 'H' => 10,
-            'I' => 5, 'J' => 15, 'K' => 10, 'L' => 10,
-            'M' => 10, 'N' => 5, 'O' => 5, 'P' => 5,
+            'A' => 5, 'B' => 12, 'C' => 5, 'D' => 5, 'E' => 5, 'F' => 8,
+            'G' => 5, 'H' => 5, 'I' => 8, 'J' => 8, 'K' => 12, 'L' => 5,
+            'M' => 5, 'N' => 5, 'O' => 5, 'P' => 5,
         ];
     }
 
-    /**
-     * @param Worksheet $sheet
-     * @return array
-     */
-    public function styles(Worksheet $sheet)
+    public function registerEvents(): array
     {
-        // This method is now much simpler. The Blade view handles the layout (colspan/rowspan).
-        // Here, we just apply borders and colors to make it look good.
+        return [
+            AfterSheet::class => function(AfterSheet $event) {
+                $sheet = $event->sheet->getDelegate();
+                $recordCount = count($this->templates);
+                $rowsPerRecord = 15; // 14 for content + 1 for page break div
 
-        $lastRow = $sheet->getHighestRow();
+                // --- Define Style Arrays ---
+                $smallFont = ['font' => ['size' => 9]];
+                $boldFont = ['font' => ['bold' => true]];
+                $boldishFont = ['font' => ['bold' => true, 'size' => 10]];
+                $centerAlign = ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER]];
+                $verticalCenter = ['alignment' => ['vertical' => Alignment::VERTICAL_CENTER]];
+                $thinBorder = ['borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]];
+                $bottomBorder = ['borders' => ['bottom' => ['borderStyle' => Border::BORDER_THIN]]];
+                $outlineBorder = ['borders' => ['outline' => ['borderStyle' => Border::BORDER_THICK]]];
 
-        // Apply borders to all cells that have content.
-        // This is a general approach. The Blade template itself creates the visual structure.
-        $sheet->getStyle('A1:P' . $lastRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+                for ($i = 0; $i < $recordCount; $i++) {
+                    $startRow = ($i * $rowsPerRecord) + 1;
 
-        // A more specific approach could be to apply borders only to the tables,
-        // but this requires calculating row ranges again, which we want to avoid for simplicity.
-        // The Blade template's inline styles will be converted, but for perfect borders,
-        // this is the most reliable method.
+                    // --- Apply Styles Row-by-Row ---
+                    $sheet->getStyle('A'.($startRow + 1))->applyFromArray($smallFont);
+                    $sheet->getStyle('F'.($startRow + 1))->applyFromArray($boldFont);
+                    $sheet->getStyle('I'.($startRow + 1).':J'.($startRow + 1))->applyFromArray($centerAlign)->applyFromArray($thinBorder);
+                    $sheet->getStyle('L'.($startRow + 1).':P'.($startRow + 1))->applyFromArray($centerAlign)->applyFromArray($thinBorder);
 
-        // Example of applying the yellow fill, though it's already in the blade file with style attributes.
-        // This is just to show the user how it can be done here as well.
-        // $sheet->getStyle('D4:H4')->getFill()
-        //       ->setFillType(Fill::FILL_SOLID)
-        //       ->getStartColor()->setARGB('FFFFFF00');
+                    $sheet->getStyle('K'.($startRow + 2).':P'.($startRow + 2))->applyFromArray($centerAlign);
 
-        return []; // No specific cell styles returned here, we modify the sheet directly.
+                    $sheet->getStyle('A'.($startRow + 3).':F'.($startRow + 3))->applyFromArray($centerAlign);
+                    $sheet->getStyle('K'.($startRow + 3).':P'.($startRow + 3))->applyFromArray($centerAlign)->applyFromArray($thinBorder);
+
+                    $sheet->getStyle('A'.($startRow + 4).':I'.($startRow + 4))->applyFromArray($bottomBorder);
+                    $sheet->getStyle('C'.($startRow + 4).':K'.($startRow + 4))->applyFromArray($centerAlign);
+                    $sheet->getStyle('L'.($startRow + 4).':P'.($startRow + 4))->applyFromArray($smallFont)->applyFromArray($centerAlign);
+
+                    $sheet->getStyle('K'.($startRow + 5).':P'.($startRow + 5))->applyFromArray($thinBorder);
+
+                    $sheet->getRowDimension($startRow + 6)->setRowHeight(25);
+                    $sheet->getStyle('A'.($startRow + 6).':P'.($startRow + 13))->applyFromArray($verticalCenter);
+
+                    $sheet->getStyle('A'.($startRow + 7))->applyFromArray($thinBorder);
+                    $sheet->getStyle('B'.($startRow + 7))->applyFromArray($centerAlign)->applyFromArray($thinBorder);
+                    $sheet->getStyle('C'.($startRow + 7).':D'.($startRow + 7))->applyFromArray($thinBorder);
+                    $sheet->getStyle('E'.($startRow + 7).':H'.($startRow + 7))->applyFromArray($boldishFont)->applyFromArray($thinBorder);
+                    $sheet->getStyle('I'.($startRow + 7).':J'.($startRow + 7))->applyFromArray($thinBorder);
+                    $sheet->getStyle('K'.($startRow + 7))->applyFromArray($boldFont);
+                    $sheet->getStyle('L'.($startRow + 7).':P'.($startRow + 7))->applyFromArray($smallFont)->applyFromArray($centerAlign);
+
+                    $sheet->getStyle('A'.($startRow + 8).':B'.($startRow + 8))->applyFromArray($smallFont)->applyFromArray($boldishFont);
+                    $sheet->getStyle('C'.($startRow + 8).':J'.($startRow + 8))->applyFromArray($centerAlign);
+                    $sheet->getStyle('K'.($startRow + 8).':P'.($startRow + 8))->applyFromArray($thinBorder);
+
+                    $sheet->getRowDimension($startRow + 9)->setRowHeight(30);
+                    $sheet->getStyle('A'.($startRow + 9).':C'.($startRow + 9))->applyFromArray($thinBorder);
+                    $sheet->getStyle('D'.($startRow + 9).':P'.($startRow + 9))->applyFromArray($thinBorder);
+
+                    $sheet->getStyle('D'.($startRow + 10).':P'.($startRow + 10))->applyFromArray($thinBorder);
+
+                    $sheet->getStyle('A'.($startRow + 11).':G'.($startRow + 11))->applyFromArray($bottomBorder);
+
+                    $sheet->getStyle('A'.($startRow + 12).':B'.($startRow + 13))->applyFromArray($smallFont)->applyFromArray($centerAlign);
+                    $sheet->getStyle('F'.($startRow + 12).':G'.($startRow + 12))->applyFromArray($smallFont);
+                    $sheet->getStyle('K'.($startRow + 12))->applyFromArray($smallFont);
+
+                    $sheet->getStyle('A'.($startRow).':P'.($startRow + 13))->applyFromArray($outlineBorder);
+                }
+            },
+        ];
     }
 }
