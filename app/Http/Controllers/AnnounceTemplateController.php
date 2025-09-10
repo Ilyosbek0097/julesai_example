@@ -83,4 +83,53 @@ class AnnounceTemplateController extends Controller
 
         return Excel::download(new AnnounceTemplatesExport($templates), 'e_lonlar.xlsx');
     }
+
+    /**
+     * Return a print-friendly HTML view of the selected templates.
+     *
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function print(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:announce_templates,announce_template_id',
+        ]);
+
+        $templates = AnnounceTemplate::with('cashbox')->whereIn('announce_template_id', $request->input('ids'))->get();
+
+        return view('prints.announce_print', ['templates' => $templates]);
+    }
+
+    /**
+     * Update the payer name for a single announce template.
+     */
+    public function updatePayerName(Request $request, AnnounceTemplate $announceTemplate)
+    {
+        $request->validate(['payer_name' => 'required|string|max:255']);
+
+        $announceTemplate->update([
+            'payer_name' => $request->input('payer_name'),
+        ]);
+
+        return redirect()->back()->with('success', 'Payer name updated successfully.');
+    }
+
+    /**
+     * Batch update the payer name for multiple announce templates.
+     */
+    public function batchUpdatePayerName(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:announce_templates,announce_template_id',
+            'payer_name' => 'required|string|max:255',
+        ]);
+
+        AnnounceTemplate::whereIn('announce_template_id', $request->input('ids'))
+            ->update(['payer_name' => $request->input('payer_name')]);
+
+        return redirect()->back()->with('success', 'Payer names updated successfully.');
+    }
 }

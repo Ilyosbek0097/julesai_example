@@ -20,6 +20,15 @@ Route::get('/announce-templates', [AnnounceTemplateController::class, 'index'])
 Route::post('/announce-templates/export', [AnnounceTemplateController::class, 'export'])
     ->name('announce-templates.export');
 
+Route::post('/announce-templates/print', [AnnounceTemplateController::class, 'print'])
+    ->name('announce-templates.print');
+
+Route::post('/announce-templates/{announceTemplate}/update-payer', [AnnounceTemplateController::class, 'updatePayerName'])
+    ->name('announce-templates.update-payer');
+
+Route::post('/announce-templates/batch-update-payer', [AnnounceTemplateController::class, 'batchUpdatePayerName'])
+    ->name('announce-templates.batch-update-payer');
+
 // You might want a dashboard route as well
 Route::get('/', function () {
     // If you have a dashboard component, you can render it here.

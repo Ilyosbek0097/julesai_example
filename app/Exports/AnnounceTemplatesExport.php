@@ -32,8 +32,8 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
         // A to P, adjusted for visual balance
         return [
             'A' => 5, 'B' => 12, 'C' => 5, 'D' => 5, 'E' => 5, 'F' => 8,
-            'G' => 5, 'H' => 5, 'I' => 8, 'J' => 8, 'K' => 12, 'L' => 5,
-            'M' => 5, 'N' => 5, 'O' => 5, 'P' => 5,
+            'G' => 5, 'H' => 5, 'I' => 8, 'J' => 8, 'K' => 5, 'L' => 12, 'M' => 5,
+            'N' => 5, 'O' => 5, 'P' => 5,
         ];
     }
 
@@ -44,7 +44,6 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
                 $sheet = $event->sheet->getDelegate();
                 $recordCount = count($this->templates);
 
-                // New calculation: 14 for Elon, 14 for Kvitansiya, 14 for Order, 1 for page break
                 $rowsPerRecord = 43;
 
                 for ($i = 0; $i < $recordCount; $i++) {
@@ -52,25 +51,24 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
 
                     // --- E'lon Section ---
                     $elonStart = $recordStartRow;
-                    $this->applySectionStyles($sheet, $elonStart);
+                    $this->applySectionStyles($sheet, $elonStart, true);
 
                     // --- Kvitansiya Section ---
                     $kvitansiyaStart = $elonStart + 14;
-                    $this->applySectionStyles($sheet, $kvitansiyaStart);
+                    $this->applySectionStyles($sheet, $kvitansiyaStart, false);
 
-                    // Apply specific bold style for "MO'" in Kvitansiya
                     $boldFont = ['font' => ['bold' => true]];
                     $sheet->getStyle('A'.($kvitansiyaStart + 12).':B'.($kvitansiyaStart + 13))->applyFromArray($boldFont);
 
                     // --- Order Section ---
                     $orderStart = $kvitansiyaStart + 14;
-                    $this->applySectionStyles($sheet, $orderStart);
+                    $this->applySectionStyles($sheet, $orderStart, false);
                 }
             },
         ];
     }
 
-    private function applySectionStyles(Worksheet $sheet, int $startRow)
+    private function applySectionStyles(Worksheet $sheet, int $startRow, bool $isElon)
     {
         $centerAlign = ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER]];
         $sheet->getStyle('A'.$startRow.':P'.($startRow + 13))->applyFromArray($centerAlign);
@@ -85,7 +83,10 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
         $sheet->getStyle('A'.($startRow + 1))->applyFromArray($smallFont);
         $sheet->getStyle('F'.($startRow + 1).':H'.($startRow + 1))->applyFromArray($boldFont);
         $sheet->getStyle('I'.($startRow + 1).':J'.($startRow + 1))->applyFromArray($thinBorder);
-        $sheet->getStyle('L'.($startRow + 1).':P'.($startRow + 1))->applyFromArray($thinBorder);
+
+        if ($isElon) {
+            $sheet->getStyle('L'.($startRow + 1).':P'.($startRow + 1))->applyFromArray($thinBorder);
+        }
 
         $sheet->getStyle('K'.($startRow + 3).':P'.($startRow + 3))->applyFromArray($thinBorder);
 
@@ -105,7 +106,7 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
         $sheet->getStyle('K'.($startRow + 7))->applyFromArray($boldFont);
         $sheet->getStyle('L'.($startRow + 7).':P'.($startRow + 7))->applyFromArray($smallFont);
 
-        $sheet->getRowDimension($startRow + 8)->setRowHeight(35); // Increased row 9 height
+        $sheet->getRowDimension($startRow + 8)->setRowHeight(35);
         $sheet->getStyle('A'.($startRow + 8).':B'.($startRow + 8))->applyFromArray($smallFont)->applyFromArray($boldishFont)->getAlignment()->setWrapText(true);
         $sheet->getStyle('K'.($startRow + 8).':P'.($startRow + 8))->applyFromArray($thinBorder);
 
@@ -122,7 +123,7 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
         $sheet->getRowDimension($startRow + 13)->setRowHeight(30);
         $sheet->getStyle('A'.($startRow + 12).':B'.($startRow + 13))->applyFromArray($smallFont)->getAlignment()->setWrapText(true);
         $sheet->getStyle('F'.($startRow + 12).':G'.($startRow + 12))->applyFromArray($smallFont);
-        $sheet->getStyle('K'.($startRow + 12))->applyFromArray($smallFont);
+        $sheet->getStyle('L'.($startRow + 12).':M'.($startRow + 12))->applyFromArray($smallFont);
 
         $sheet->getStyle('A'.($startRow).':P'.($startRow + 13))->applyFromArray($outlineBorder);
     }
