@@ -44,19 +44,21 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
                 $sheet = $event->sheet->getDelegate();
                 $recordCount = count($this->templates);
 
-                $rowsPerRecord = 32;
+                // New calculation: 14 rows for E'lon, 14 for Kvitansiya, 1 for page break div
+                $rowsPerRecord = 29;
 
                 for ($i = 0; $i < $recordCount; $i++) {
                     $recordStartRow = ($i * $rowsPerRecord) + 1;
 
                     // --- E'lon Section ---
                     $elonStart = $recordStartRow;
-                    $this->applySectionStyles($sheet, $elonStart, true);
+                    $this->applySectionStyles($sheet, $elonStart);
 
                     // --- Kvitansiya Section ---
-                    $kvitansiyaStart = $elonStart + 17;
-                    $this->applySectionStyles($sheet, $kvitansiyaStart, false);
+                    $kvitansiyaStart = $elonStart + 14; // Starts immediately after E'lon's 14 rows
+                    $this->applySectionStyles($sheet, $kvitansiyaStart);
 
+                    // Apply specific bold style for "MO'" in Kvitansiya
                     $boldFont = ['font' => ['bold' => true]];
                     $sheet->getStyle('A'.($kvitansiyaStart + 12).':B'.($kvitansiyaStart + 13))->applyFromArray($boldFont);
                 }
@@ -64,13 +66,11 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
         ];
     }
 
-    private function applySectionStyles(Worksheet $sheet, int $startRow, bool $isElon)
+    private function applySectionStyles(Worksheet $sheet, int $startRow)
     {
-        // --- GLOBAL STYLE: Center everything first ---
         $centerAlign = ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER]];
         $sheet->getStyle('A'.$startRow.':P'.($startRow + 13))->applyFromArray($centerAlign);
 
-        // --- Define Other Style Arrays ---
         $smallFont = ['font' => ['size' => 9]];
         $boldFont = ['font' => ['bold' => true]];
         $boldishFont = ['font' => ['bold' => true, 'size' => 10]];
@@ -78,7 +78,6 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
         $bottomBorder = ['borders' => ['bottom' => ['borderStyle' => Border::BORDER_THIN]]];
         $outlineBorder = ['borders' => ['outline' => ['borderStyle' => Border::BORDER_THICK]]];
 
-        // --- Apply Individual Styles (they will override the global center alignment if needed) ---
         $sheet->getStyle('A'.($startRow + 1))->applyFromArray($smallFont);
         $sheet->getStyle('F'.($startRow + 1).':H'.($startRow + 1))->applyFromArray($boldFont);
         $sheet->getStyle('I'.($startRow + 1).':J'.($startRow + 1))->applyFromArray($thinBorder);
@@ -88,7 +87,6 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
 
         $sheet->getStyle('A'.($startRow + 4))->applyFromArray($smallFont);
         $sheet->getStyle('A'.($startRow + 4).':I'.($startRow + 4))->applyFromArray($bottomBorder);
-        $sheet->getStyle('L'.($startRow + 4).':P'.($startRow + 4))->applyFromArray($smallFont);
 
         $sheet->getStyle('K'.($startRow + 5).':P'.($startRow + 5))->applyFromArray($thinBorder);
 
@@ -103,7 +101,7 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
         $sheet->getStyle('K'.($startRow + 7))->applyFromArray($boldFont);
         $sheet->getStyle('L'.($startRow + 7).':P'.($startRow + 7))->applyFromArray($smallFont);
 
-        $sheet->getRowDimension($startRow + 8)->setRowHeight(30); // Increased row 9 height
+        $sheet->getRowDimension($startRow + 8)->setRowHeight(30);
         $sheet->getStyle('A'.($startRow + 8).':B'.($startRow + 8))->applyFromArray($smallFont)->applyFromArray($boldishFont)->getAlignment()->setWrapText(true);
         $sheet->getStyle('K'.($startRow + 8).':P'.($startRow + 8))->applyFromArray($thinBorder);
 
@@ -116,8 +114,8 @@ class AnnounceTemplatesExport implements FromView, WithColumnWidths, WithEvents
 
         $sheet->getStyle('A'.($startRow + 11).':G'.($startRow + 11))->applyFromArray($bottomBorder);
 
-        $sheet->getRowDimension($startRow + 12)->setRowHeight(30); // Increased row 13 height
-        $sheet->getRowDimension($startRow + 13)->setRowHeight(30); // Increased row 14 height
+        $sheet->getRowDimension($startRow + 12)->setRowHeight(30);
+        $sheet->getRowDimension($startRow + 13)->setRowHeight(30);
         $sheet->getStyle('A'.($startRow + 12).':B'.($startRow + 13))->applyFromArray($smallFont)->getAlignment()->setWrapText(true);
         $sheet->getStyle('F'.($startRow + 12).':G'.($startRow + 12))->applyFromArray($smallFont);
         $sheet->getStyle('K'.($startRow + 12))->applyFromArray($smallFont);
