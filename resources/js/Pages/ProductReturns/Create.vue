@@ -65,7 +65,7 @@ const submit = () => {
                         <div>
                             <Label for="inventory">Mahsulot</Label>
                              <Select v-model="form.inventory_id">
-                                <SelectTrigger id="inventory">
+                                <SelectTrigger id="inventory" class="w-full">
                                     <SelectValue placeholder="Mahsulotni tanlang..." />
                                 </SelectTrigger>
                                 <SelectContent>
