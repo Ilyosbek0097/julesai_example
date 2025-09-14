@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -19,6 +19,16 @@ import { Label } from '@/components/ui/label';
 const props = defineProps<{
     inventories: { id: number; name: string }[];
 }>();
+
+const productSearchTerm = ref('');
+const filteredInventories = computed(() => {
+    if (!productSearchTerm.value) {
+        return props.inventories;
+    }
+    return props.inventories.filter(i =>
+        i.name.toLowerCase().includes(productSearchTerm.value.toLowerCase())
+    );
+});
 
 const form = useForm({
     inventory_id: null as number | null,
@@ -59,7 +69,10 @@ const submit = () => {
                                     <SelectValue placeholder="Mahsulotni tanlang..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem v-for="inventory in inventories" :key="inventory.id" :value="inventory.id">
+                                    <div class="p-2">
+                                        <Input v-model="productSearchTerm" placeholder="Mahsulot nomini yozing..." @keydown.stop />
+                                    </div>
+                                    <SelectItem v-for="inventory in filteredInventories" :key="inventory.id" :value="inventory.id">
                                         {{ inventory.name }}
                                     </SelectItem>
                                 </SelectContent>
