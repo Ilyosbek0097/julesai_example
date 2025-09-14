@@ -41,7 +41,8 @@ const reportOptions = [
     { value: 'entries', label: 'Kirimlar hisoboti' },
     { value: 'outputs', label: 'Chiqimlar hisoboti' },
     { value: 'product_outputs', label: 'Mahsulot bo\'yicha chiqimlar' },
-    { value: 'returns', label: 'Qaytarishlar hisoboti' },
+    { value: 'returns', label: 'Qaytarishlar (umumiy)' },
+    { value: 'return_details', label: 'Qaytarishlar (batafsil)' },
 ];
 
 const inventoryOptions = computed(() =>

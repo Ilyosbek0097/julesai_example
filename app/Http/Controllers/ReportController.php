@@ -7,6 +7,7 @@ use App\Models\Inventory;
 use App\Models\InventoryEntry;
 use App\Models\InventoryOutput;
 use App\Models\InventoryReturn;
+use App\Models\ReturnDetail;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
@@ -23,10 +24,10 @@ class ReportController extends Controller
     public function generate(Request $request)
     {
         $validated = $request->validate([
-            'type' => 'required|string|in:stock,entries,outputs,returns,consolidated,product_outputs',
+            'type' => 'required|string|in:stock,entries,outputs,returns,consolidated,product_outputs,return_details',
             'product_id' => 'sometimes|required_if:type,product_outputs|exists:inventories,id',
-            'from_date' => 'sometimes|required_if:type,entries,outputs,returns,product_outputs|date',
-            'to_date' => 'sometimes|required_if:type,entries,outputs,returns|date|after_or_equal:from_date',
+            'from_date' => 'sometimes|required_if:type,entries,outputs,returns,product_outputs,return_details|date',
+            'to_date' => 'sometimes|required_if:type,entries,outputs,returns,return_details|date|after_or_equal:from_date',
         ]);
 
         $report = $this->getReportData($validated['type'], $validated['from_date'] ?? null, $validated['to_date'] ?? null);
@@ -42,10 +43,10 @@ class ReportController extends Controller
     public function export(Request $request)
     {
         $validated = $request->validate([
-            'type' => 'required|string|in:stock,entries,outputs,returns,consolidated,product_outputs',
+            'type' => 'required|string|in:stock,entries,outputs,returns,consolidated,product_outputs,return_details',
             'product_id' => 'sometimes|required_if:type,product_outputs|exists:inventories,id',
-            'from_date' => 'sometimes|required_if:type,entries,outputs,returns,product_outputs|date',
-            'to_date' => 'sometimes|required_if:type,entries,outputs,returns|date|after_or_equal:from_date',
+            'from_date' => 'sometimes|required_if:type,entries,outputs,returns,product_outputs,return_details|date',
+            'to_date' => 'sometimes|required_if:type,entries,outputs,returns,return_details|date|after_or_equal:from_date',
         ]);
 
         $report = $this->getReportData($validated['type'], $validated['from_date'] ?? null, $validated['to_date'] ?? null);
@@ -125,6 +126,28 @@ class ReportController extends Controller
                         'Qaytarish Raqami' => $return->return_number,
                         'Sana' => $return->return_date,
                         'Izoh' => $return->comment,
+                    ]);
+                break;
+
+            case 'return_details':
+                $columns = ['Qaytarish Raqami', 'Sana', 'Mahsulot', 'Miqdori', 'Narxi', 'Umumiy Summa', 'Izoh'];
+                $data = ReturnDetail::with([
+                        'inventoryReturn',
+                        'outputDetail.inventoryEntry.inventory.unit'
+                    ])
+                    ->whereHas('inventoryReturn', function ($query) use ($fromDate, $toDate) {
+                        $query->whereBetween('return_date', [$fromDate, $toDate]);
+                    })
+                    ->latest()
+                    ->get()
+                    ->map(fn ($detail) => [
+                        'Qaytarish Raqami' => $detail->inventoryReturn->return_number,
+                        'Sana' => $detail->inventoryReturn->return_date,
+                        'Mahsulot' => $detail->outputDetail->inventoryEntry->inventory->name,
+                        'Miqdori' => $detail->quantity . ' ' . $detail->outputDetail->inventoryEntry->inventory->unit->name,
+                        'Narxi' => number_format($detail->price, 2),
+                        'Umumiy Summa' => number_format($detail->total, 2),
+                        'Izoh' => $detail->inventoryReturn->comment,
                     ]);
                 break;
 
