@@ -86,16 +86,11 @@ class ReportController extends Controller
                 });
                 break;
             case 'stock':
-                $columns = ['Mahsulot', 'Hozirgi Qoldiq', 'Umumiy narx'];
-                $data = Inventory::with('unit', 'entries')->get()->map(function ($inventory) {
-                    $remaining_stock = $inventory->entries()->sum('remaining_quantity');
-                    $avg_price = $inventory->entries->avg('unit_price') ?? 0;
-                    $remaining_value = $remaining_stock * $avg_price;
-
+                $columns = ['Mahsulot', 'Hozirgi Qoldiq'];
+                $data = Inventory::with('unit')->get()->map(function ($inventory) {
                     return [
                         'Mahsulot' => $inventory->name . ' (' . $inventory->unit->name . ')',
-                        'Hozirgi Qoldiq' => $remaining_stock,
-                        'Umumiy narx' => number_format($remaining_value, 2) . ' so‘m',
+                        'Hozirgi Qoldiq' => $inventory->entries()->sum('remaining_quantity'),
                     ];
                 });
                 break;
