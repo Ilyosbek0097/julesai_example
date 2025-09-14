@@ -6,6 +6,7 @@ use App\Http\Requests\StoreInventoryOutputRequest;
 use App\Http\Requests\UpdateInventoryOutputRequest;
 use App\Models\InventoryEntry;
 use App\Models\InventoryOutput;
+use App\Services\TelegramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -38,11 +39,13 @@ class InventoryOutputController extends Controller
         ]);
     }
 
-    public function store(StoreInventoryOutputRequest $request)
+    public function store(StoreInventoryOutputRequest $request, TelegramService $telegramService)
     {
         $validated = $request->validated();
+        $user = Auth::user();
+        $output = null;
 
-        DB::transaction(function () use ($validated) {
+        DB::transaction(function () use ($validated, $user, &$output) {
             $totalPrice = collect($validated['items'])->sum(function ($item) {
                 return $item['quantity'] * $item['price'];
             });
@@ -50,22 +53,46 @@ class InventoryOutputController extends Controller
             $output = InventoryOutput::create([
                 'output_date' => $validated['output_date'],
                 'comment' => $validated['comment'],
-                'user_id' => Auth::id(),
+                'user_id' => $user->id,
                 'total_price' => $totalPrice,
                 'output_number' => 'CH-' . time(), // Simple unique number
             ]);
 
             foreach ($validated['items'] as $item) {
                 $entry = InventoryEntry::find($item['inventory_entry_id']);
-                if ($entry && $entry->quantity >= $item['quantity']) {
+                // The validation request should prevent this, but we double-check.
+                if ($entry && $entry->remaining_quantity >= $item['quantity']) {
                     $output->output_details()->create($item);
-                    $entry->decrement('quantity', $item['quantity']);
+                    $entry->decrement('remaining_quantity', $item['quantity']);
                 } else {
-                    // This should be caught by validation, but as a safeguard
                     throw new \Exception('Not enough stock for one of the items.');
                 }
             }
         });
+
+        // Eager load details for the notification message
+        $output->load('output_details.inventoryEntry.inventory.unit');
+
+        $message = "*🔥 Yangi Chiqim!*" . "\n\n";
+        $message .= "*Hujjat Raqami:* " . $output->output_number . "\n";
+        $message .= "*Sana:* " . $output->output_date . "\n";
+        if (!empty($output->comment)) {
+            $message .= "*Izoh:* " . $output->comment . "\n";
+        }
+        $message .= "\n*Mahsulotlar:*" . "\n";
+
+        $messageDetails = $output->output_details->map(function ($detail) {
+            $productName = $detail->inventoryEntry->inventory->name;
+            $unitName = $detail->inventoryEntry->inventory->unit->name;
+            $itemTotal = $detail->quantity * $detail->price;
+            return "- *{$productName}*: {$detail->quantity} {$unitName} x " . number_format($detail->price, 2) . " = " . number_format($itemTotal, 2);
+        })->implode("\n");
+
+        $message .= $messageDetails . "\n\n";
+        $message .= "*Jami Summa:* " . number_format($output->total_price, 2) . " so'm\n";
+        $message .= "*Xodim:* " . $user->name;
+
+        $telegramService->sendMessage($message);
 
         return redirect()->route('inventory-outputs.index')->with('message', 'Chiqim muvaffaqiyatli yaratildi.');
     }

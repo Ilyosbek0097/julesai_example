@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateInventoryEntryRequest;
 use App\Models\Inventory;
 use App\Models\InventoryEntry;
 use App\Models\Supplier;
+use App\Services\TelegramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -31,25 +32,50 @@ class InventoryEntryController extends Controller
         ]);
     }
 
-    public function store(StoreInventoryEntryRequest $request)
+    public function store(StoreInventoryEntryRequest $request, TelegramService $telegramService)
     {
         $validated = $request->validated();
+        $user = Auth::user();
+        $supplier = Supplier::find($validated['supplier_id']);
+        $documentNumber = 'K-' . time(); // A single document number for the operation
 
-        DB::transaction(function () use ($validated) {
+        $totalAmount = 0;
+        $messageDetails = [];
+
+        DB::transaction(function () use ($validated, $user, $supplier, $documentNumber, &$totalAmount, &$messageDetails) {
             foreach ($validated['items'] as $item) {
-                InventoryEntry::create([
+                $product = Inventory::find($item['product_id']);
+                $entry = InventoryEntry::create([
                     'inventory_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['price'],
                     'entry_date' => now(),
                     'remaining_quantity' => $item['quantity'],
                     'comment' => $validated['comment'],
-                    'user_id' => Auth::id(),
-                    'entry_number' => 'K-' . time() . '-' . $item['product_id'],
-                    'supplier_id' => $validated['supplier_id'],
+                    'user_id' => $user->id,
+                    'entry_number' => $documentNumber . '-' . $item['product_id'],
+                    'supplier_id' => $supplier->id,
                 ]);
+
+                $itemTotal = $item['quantity'] * $item['price'];
+                $totalAmount += $itemTotal;
+                $messageDetails[] = "- *{$product->name}*: {$item['quantity']} x " . number_format($item['price'], 2) . " = " . number_format($itemTotal, 2);
             }
         });
+
+        // Send Telegram notification after the transaction is successful
+        $message = "*✅ Yangi Kirim!*" . "\n\n";
+        $message .= "*Hujjat Raqami:* " . $documentNumber . "\n";
+        $message .= "*Yetkazib Beruvchi:* " . $supplier->name . "\n";
+        if (!empty($validated['comment'])) {
+            $message .= "*Izoh:* " . $validated['comment'] . "\n";
+        }
+        $message .= "\n*Mahsulotlar:*" . "\n";
+        $message .= implode("\n", $messageDetails) . "\n\n";
+        $message .= "*Jami Summa:* " . number_format($totalAmount, 2) . " so'm\n";
+        $message .= "*Xodim:* " . $user->name;
+
+        $telegramService->sendMessage($message);
 
         return redirect()->route('inventory-entries.index')->with('message', 'Kirim muvaffaqiyatli yaratildi.');
     }
