@@ -21,8 +21,11 @@ class AnnounceTemplateController extends Controller
         $user = Auth::user();
         $query = AnnounceTemplate::query();
 
-        // Cashbox filter
-        if ($request->filled('cashbox_id')) {
+        // If no cashbox is selected, return no results.
+        if (!$request->filled('cashbox_id')) {
+            $query->whereRaw('1 = 0');
+        } else {
+            // Cashbox filter
             $query->where('cashbox_id', $request->input('cashbox_id'));
         }
 
@@ -45,7 +48,6 @@ class AnnounceTemplateController extends Controller
         // Get cashboxes for the dropdown based on user role
         $cashboxesQuery = Cashbox::query();
 
-        // I'm assuming the user object has a `hasRole` method and a `local_code` property.
         if ($user && !$user->hasRole('admin')) {
             $cashboxesQuery->where('local_code', $user->local_code);
         }
@@ -68,9 +70,6 @@ class AnnounceTemplateController extends Controller
 
     /**
      * Export selected announce templates to an Excel file.
-     *
-     * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function export(Request $request)
     {
@@ -86,9 +85,6 @@ class AnnounceTemplateController extends Controller
 
     /**
      * Return a print-friendly HTML view of the selected templates.
-     *
-     * @param Request $request
-     * @return \Illuminate\Contracts\View\View
      */
     public function print(Request $request)
     {
