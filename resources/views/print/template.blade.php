@@ -10,6 +10,7 @@
                 -webkit-print-color-adjust: exact;
                 color-adjust: exact;
                 padding-left: 2cm;
+                padding-top: 1cm;
             }
 
             table {
